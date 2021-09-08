@@ -1,5 +1,5 @@
 # Factorio-CPU
-
+This project contains scripts and docs for a microcontroller made in the game [Factorio](https://www.factorio.com/).
 ## To Do's
  - instruction is 24bits right now, 8 bit opcode 16 bit literal
 this could be 32 bits 8bit opcode, 24 bit literal, just change the roll and masking numbers
