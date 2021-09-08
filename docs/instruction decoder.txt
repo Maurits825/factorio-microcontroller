@@ -1,0 +1,28 @@
+F = RAM
+W = working registry
+D = data
+A = Address
+W = write
+R = read
+L = literal
+
+Memory:
+F write = green
+W write = blue
+F read  = yellow
+W read  = pink
+
+D to W   = cyan
+D to F   = white
+L to AWF = grey
+L to ARF = black
+L to W   = copper
+
+
+ALU:
+W to ALU1 = speed1
+F to ALU1 = eff1
+L to ALU1 = prod1
+W to ALU2 = speed2
+F to ALU2 = eff2
+L to ALU2 = prod2
