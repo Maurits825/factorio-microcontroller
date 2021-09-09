@@ -1,0 +1,550 @@
+[
+    {
+        "name": "accumulator",
+        "type": "item"
+    },
+    {
+        "name": "advanced-circuit",
+        "type": "item"
+    },
+    {
+        "name": "arithmetic-combinator",
+        "type": "item"
+    },
+    {
+        "name": "artillery-turret",
+        "type": "item"
+    },
+    {
+        "name": "assembling-machine-1",
+        "type": "item"
+    },
+    {
+        "name": "assembling-machine-2",
+        "type": "item"
+    },
+    {
+        "name": "assembling-machine-3",
+        "type": "item"
+    },
+    {
+        "name": "battery",
+        "type": "item"
+    },
+    {
+        "name": "battery-equipment",
+        "type": "item"
+    },
+    {
+        "name": "battery-mk2-equipment",
+        "type": "item"
+    },
+    {
+        "name": "beacon",
+        "type": "item"
+    },
+    {
+        "name": "belt-immunity-equipment",
+        "type": "item"
+    },
+    {
+        "name": "big-electric-pole",
+        "type": "item"
+    },
+    {
+        "name": "boiler",
+        "type": "item"
+    },
+    {
+        "name": "burner-inserter",
+        "type": "item"
+    },
+    {
+        "name": "burner-mining-drill",
+        "type": "item"
+    },
+    {
+        "name": "centrifuge",
+        "type": "item"
+    },
+    {
+        "name": "chemical-plant",
+        "type": "item"
+    },
+    {
+        "name": "coal",
+        "type": "item"
+    },
+    {
+        "name": "concrete",
+        "type": "item"
+    },
+    {
+        "name": "constant-combinator",
+        "type": "item"
+    },
+    {
+        "name": "construction-robot",
+        "type": "item"
+    },
+    {
+        "name": "copper-cable",
+        "type": "item"
+    },
+    {
+        "name": "copper-ore",
+        "type": "item"
+    },
+    {
+        "name": "copper-plate",
+        "type": "item"
+    },
+    {
+        "name": "crude-oil-barrel",
+        "type": "item"
+    },
+    {
+        "name": "decider-combinator",
+        "type": "item"
+    },
+    {
+        "name": "discharge-defense-equipment",
+        "type": "item"
+    },
+    {
+        "name": "electric-engine-unit",
+        "type": "item"
+    },
+    {
+        "name": "electric-furnace",
+        "type": "item"
+    },
+    {
+        "name": "electric-mining-drill",
+        "type": "item"
+    },
+    {
+        "name": "electronic-circuit",
+        "type": "item"
+    },
+    {
+        "name": "empty-barrel",
+        "type": "item"
+    },
+    {
+        "name": "energy-shield-equipment",
+        "type": "item"
+    },
+    {
+        "name": "energy-shield-mk2-equipment",
+        "type": "item"
+    },
+    {
+        "name": "engine-unit",
+        "type": "item"
+    },
+    {
+        "name": "exoskeleton-equipment",
+        "type": "item"
+    },
+    {
+        "name": "explosives",
+        "type": "item"
+    },
+    {
+        "name": "express-splitter",
+        "type": "item"
+    },
+    {
+        "name": "express-transport-belt",
+        "type": "item"
+    },
+    {
+        "name": "express-underground-belt",
+        "type": "item"
+    },
+    {
+        "name": "fast-inserter",
+        "type": "item"
+    },
+    {
+        "name": "fast-splitter",
+        "type": "item"
+    },
+    {
+        "name": "fast-transport-belt",
+        "type": "item"
+    },
+    {
+        "name": "fast-underground-belt",
+        "type": "item"
+    },
+    {
+        "name": "filter-inserter",
+        "type": "item"
+    },
+    {
+        "name": "flamethrower-turret",
+        "type": "item"
+    },
+    {
+        "name": "flying-robot-frame",
+        "type": "item"
+    },
+    {
+        "name": "fusion-reactor-equipment",
+        "type": "item"
+    },
+    {
+        "name": "gate",
+        "type": "item"
+    },
+    {
+        "name": "green-wire",
+        "type": "item"
+    },
+    {
+        "name": "gun-turret",
+        "type": "item"
+    },
+    {
+        "name": "hazard-concrete",
+        "type": "item"
+    },
+    {
+        "name": "heat-exchanger",
+        "type": "item"
+    },
+    {
+        "name": "heat-pipe",
+        "type": "item"
+    },
+    {
+        "name": "heavy-oil-barrel",
+        "type": "item"
+    },
+    {
+        "name": "inserter",
+        "type": "item"
+    },
+    {
+        "name": "iron-chest",
+        "type": "item"
+    },
+    {
+        "name": "iron-gear-wheel",
+        "type": "item"
+    },
+    {
+        "name": "iron-ore",
+        "type": "item"
+    },
+    {
+        "name": "iron-plate",
+        "type": "item"
+    },
+    {
+        "name": "iron-stick",
+        "type": "item"
+    },
+    {
+        "name": "lab",
+        "type": "item"
+    },
+    {
+        "name": "land-mine",
+        "type": "item"
+    },
+    {
+        "name": "landfill",
+        "type": "item"
+    },
+    {
+        "name": "laser-turret",
+        "type": "item"
+    },
+    {
+        "name": "light-oil-barrel",
+        "type": "item"
+    },
+    {
+        "name": "logistic-chest-active-provider",
+        "type": "item"
+    },
+    {
+        "name": "logistic-chest-buffer",
+        "type": "item"
+    },
+    {
+        "name": "logistic-chest-passive-provider",
+        "type": "item"
+    },
+    {
+        "name": "logistic-chest-requester",
+        "type": "item"
+    },
+    {
+        "name": "logistic-chest-storage",
+        "type": "item"
+    },
+    {
+        "name": "logistic-robot",
+        "type": "item"
+    },
+    {
+        "name": "long-handed-inserter",
+        "type": "item"
+    },
+    {
+        "name": "low-density-structure",
+        "type": "item"
+    },
+    {
+        "name": "lubricant-barrel",
+        "type": "item"
+    },
+    {
+        "name": "medium-electric-pole",
+        "type": "item"
+    },
+    {
+        "name": "night-vision-equipment",
+        "type": "item"
+    },
+    {
+        "name": "nuclear-fuel",
+        "type": "item"
+    },
+    {
+        "name": "nuclear-reactor",
+        "type": "item"
+    },
+    {
+        "name": "offshore-pump",
+        "type": "item"
+    },
+    {
+        "name": "oil-refinery",
+        "type": "item"
+    },
+    {
+        "name": "personal-laser-defense-equipment",
+        "type": "item"
+    },
+    {
+        "name": "personal-roboport-equipment",
+        "type": "item"
+    },
+    {
+        "name": "personal-roboport-mk2-equipment",
+        "type": "item"
+    },
+    {
+        "name": "petroleum-gas-barrel",
+        "type": "item"
+    },
+    {
+        "name": "pipe",
+        "type": "item"
+    },
+    {
+        "name": "pipe-to-ground",
+        "type": "item"
+    },
+    {
+        "name": "plastic-bar",
+        "type": "item"
+    },
+    {
+        "name": "power-switch",
+        "type": "item"
+    },
+    {
+        "name": "processing-unit",
+        "type": "item"
+    },
+    {
+        "name": "programmable-speaker",
+        "type": "item"
+    },
+    {
+        "name": "pump",
+        "type": "item"
+    },
+    {
+        "name": "pumpjack",
+        "type": "item"
+    },
+    {
+        "name": "radar",
+        "type": "item"
+    },
+    {
+        "name": "rail-chain-signal",
+        "type": "item"
+    },
+    {
+        "name": "rail-signal",
+        "type": "item"
+    },
+    {
+        "name": "red-wire",
+        "type": "item"
+    },
+    {
+        "name": "refined-concrete",
+        "type": "item"
+    },
+    {
+        "name": "refined-hazard-concrete",
+        "type": "item"
+    },
+    {
+        "name": "roboport",
+        "type": "item"
+    },
+    {
+        "name": "rocket-control-unit",
+        "type": "item"
+    },
+    {
+        "name": "rocket-fuel",
+        "type": "item"
+    },
+    {
+        "name": "rocket-silo",
+        "type": "item"
+    },
+    {
+        "name": "satellite",
+        "type": "item"
+    },
+    {
+        "name": "small-electric-pole",
+        "type": "item"
+    },
+    {
+        "name": "small-lamp",
+        "type": "item"
+    },
+    {
+        "name": "solar-panel",
+        "type": "item"
+    },
+    {
+        "name": "solar-panel-equipment",
+        "type": "item"
+    },
+    {
+        "name": "solid-fuel",
+        "type": "item"
+    },
+    {
+        "name": "splitter",
+        "type": "item"
+    },
+    {
+        "name": "stack-filter-inserter",
+        "type": "item"
+    },
+    {
+        "name": "stack-inserter",
+        "type": "item"
+    },
+    {
+        "name": "steam-engine",
+        "type": "item"
+    },
+    {
+        "name": "steam-turbine",
+        "type": "item"
+    },
+    {
+        "name": "steel-chest",
+        "type": "item"
+    },
+    {
+        "name": "steel-furnace",
+        "type": "item"
+    },
+    {
+        "name": "steel-plate",
+        "type": "item"
+    },
+    {
+        "name": "stone",
+        "type": "item"
+    },
+    {
+        "name": "stone-brick",
+        "type": "item"
+    },
+    {
+        "name": "stone-furnace",
+        "type": "item"
+    },
+    {
+        "name": "stone-wall",
+        "type": "item"
+    },
+    {
+        "name": "storage-tank",
+        "type": "item"
+    },
+    {
+        "name": "substation",
+        "type": "item"
+    },
+    {
+        "name": "sulfur",
+        "type": "item"
+    },
+    {
+        "name": "sulfuric-acid-barrel",
+        "type": "item"
+    },
+    {
+        "name": "train-stop",
+        "type": "item"
+    },
+    {
+        "name": "transport-belt",
+        "type": "item"
+    },
+    {
+        "name": "underground-belt",
+        "type": "item"
+    },
+    {
+        "name": "uranium-235",
+        "type": "item"
+    },
+    {
+        "name": "uranium-238",
+        "type": "item"
+    },
+    {
+        "name": "uranium-fuel-cell",
+        "type": "item"
+    },
+    {
+        "name": "uranium-ore",
+        "type": "item"
+    },
+    {
+        "name": "used-up-uranium-fuel-cell",
+        "type": "item"
+    },
+    {
+        "name": "water-barrel",
+        "type": "item"
+    },
+    {
+        "name": "wood",
+        "type": "item"
+    },
+    {
+        "name": "wooden-chest",
+        "type": "item"
+    }
+]
