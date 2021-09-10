@@ -1,4 +1,3 @@
-import random
 import zlib
 import json
 import copy
@@ -9,7 +8,7 @@ constant_comb_blueprint = "0eNp9UEuKwzAMvYvWTiFO0493PUcZipNqWkEiB0cJE4LvXrmBoZuZ
 max_signal_per_comb = 20
 
 
-class Binary2ROM:
+class Program2ROM:
 
     def __init__(self):
         self.rom_blueprint_template = self.decode_blueprint(constant_comb_blueprint)
@@ -110,17 +109,19 @@ class Binary2ROM:
 @click.command()
 @click.option('--hex_file', '-h', help='Name of file containing the program in hexadecimal')
 @click.option('--bin_file', '-b', help='Name of file containing the program in binary')
-@click.option('--rom_map', '-m', help='Generate the rom map blueprint')
+@click.option('--rom_map', '-m', help='Generate the rom map blueprint', is_flag=True)
 def main(hex_file, bin_file, rom_map):
-    binary2rom = Binary2ROM()
+    binary2rom = Program2ROM()
     if rom_map:
         rom_map_blueprint = binary2rom.create_rom_map_blueprint()
         print(rom_map_blueprint)
-    else:
-        base = 16 if hex_file else 2 if bin_file else 0
+    elif hex_file or bin_file:
+        base = 16 if hex_file else 2
         program = binary2rom.convert_file_to_base10_list(hex_file, base)
         program_rom_blueprint = binary2rom.convert_program_to_rom(program)
         print(program_rom_blueprint)
+    else:
+        print("Incorrect input args, see --help")
 
 
 if __name__ == '__main__':
