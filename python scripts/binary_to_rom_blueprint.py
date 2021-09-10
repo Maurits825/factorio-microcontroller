@@ -28,6 +28,14 @@ class Binary2ROM:
             signal_map = json.load(f)
         return signal_map
 
+    def convert_file_to_base10_list(self, file_name, base):
+        program = []
+        with open(file_name) as file:
+            for line in file:
+                program.append(int(line, base))
+
+        return program
+
     def decode_blueprint(self, blueprint_string):
         raw_json = zlib.decompress(b64decode(blueprint_string.encode('ascii')[1:]))
         return json.loads(raw_json)
@@ -100,22 +108,19 @@ class Binary2ROM:
 
 
 @click.command()
-@click.option('--hex', '-h', help='Name of file containing the program in hexadecimal')
-@click.option('--bin', '-b', help='Name of file containing the program in binary')
+@click.option('--hex_file', '-h', help='Name of file containing the program in hexadecimal')
+@click.option('--bin_file', '-b', help='Name of file containing the program in binary')
 @click.option('--rom_map', '-m', help='Generate the rom map blueprint')
-def main(hex, bin, rom_map):
+def main(hex_file, bin_file, rom_map):
     binary2rom = Binary2ROM()
-    if hex:
-        program = [random.randint(0, 100) for i in range(100)] # TODO load hex file
-        program_rom_blueprint = binary2rom.convert_program_to_rom(program)
-        print(program_rom_blueprint)
-    elif bin:
-        program = [random.randint(0, 100) for i in range(100)]  # TODO load binary file
-        program_rom_blueprint = binary2rom.convert_program_to_rom(program)
-        print(program_rom_blueprint)
-    elif rom_map:
+    if rom_map:
         rom_map_blueprint = binary2rom.create_rom_map_blueprint()
         print(rom_map_blueprint)
+    else:
+        base = 16 if hex_file else 2 if bin_file else 0
+        program = binary2rom.convert_file_to_base10_list(hex_file, base)
+        program_rom_blueprint = binary2rom.convert_program_to_rom(program)
+        print(program_rom_blueprint)
 
 
 if __name__ == '__main__':
