@@ -6,7 +6,6 @@ with open('../resources/raw.txt', 'r') as file:
 
 data = lua.decode(raw_data)
 
-filters = ['burner-generator']
 signals = []
 for item in data['item']:
     if 'flags' in data['item'][item] and data['item'][item]['flags'][0] == 'hidden':
