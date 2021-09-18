@@ -4,7 +4,7 @@ compiler for the gg assembly language
 
 import json
 
-
+#TODO: make into class, add click cmd, clean up/improved, add error messages?
 def compileGG():
     codefile = open('../programs/test.txt', 'r')
 
@@ -30,7 +30,7 @@ def compileGG():
 
                 elif len(splitline) == 1:
                     # goto label
-                    labels[splitline[0]] = format(len(rawcode), '016b')
+                    labels[splitline[0]] = format(len(rawcode)+1, '024b')
 
                 # Bit test
                 elif 'BTS' in splitline[0]:
@@ -66,19 +66,21 @@ def compileGG():
 
     i = 0
     for line in rawcode:
-        binarycode.append(opcode[rawcode[i][0]] + rawcode[i][1])
+        binarycode.append(rawcode[i][1] + opcode[rawcode[i][0]])
         i = i + 1
 
+    """
     i = 0
     for line in binarycode:
-        hexcode.append('%06X' % int(binarycode[i], 2))
+        hexcode.append('%07X' % int(binarycode[i], 2))
         i = i + 1
     # print('Hex code:', hexcode)
+    """
 
     i = 0
     Hexfile = open('../programs/hexcode_16_bit.txt', 'w')
-    for line in hexcode:
-        Hexfile.write(hexcode[i] + '\n')
+    for line in binarycode:
+        Hexfile.write(binarycode[i] + '\n')
         i = i + 1
 
     Hexfile.close()

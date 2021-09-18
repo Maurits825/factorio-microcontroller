@@ -1,10 +1,12 @@
-# store 2 in a
-% a 0b0000000000000001
-MOVLW 0b0000000000000010
+# store 0 in a
+% a 0b000000000000000000000001
+MOVLW 0b000000000000000000000000
 MOVWF a
 
-# store 5 in W
-MOVLW 0b0000000000000101
+# store 1 in W
+MOVLW 0b000000000000000000000001
 
-#add W and a --> 2+5=7 store in a
-ADDWF,w a
+loop
+#add W and a store in a
+ADDWF,f a
+GOTO loop
