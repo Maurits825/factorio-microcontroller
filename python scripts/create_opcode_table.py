@@ -23,6 +23,15 @@ for opcode in sorted(opcodes_expanded, key=opcodes_expanded.get):
 
 print(md_table)
 
+if len(opcodes_used) != len(set(opcodes_used)):
+    print("Duplicate Opcodes found!")
+    opcodes_used_set = set()
+    for opcode in opcodes_used:
+        if opcode in opcodes_used_set:
+            print(opcode)
+        else:
+            opcodes_used_set.add(opcode)
+
 opcode_remaining = dict()
 for i in range(1, 255):
     if i not in opcodes_used:

@@ -1,89 +1,132 @@
-"""
-compiler for the gg assembly language
-"""
-
 import json
+import click
 
-#TODO: make into class, add click cmd, clean up/improved, add error messages?
-def compileGG():
-    codefile = open('../programs/test.txt', 'r')
 
-    rawcode = list()
-    binarycode = list()
-    hexcode = list()
-    addrf = {}
-    labels = {}
+class FactorioCompiler:
+    def __init__(self):
+        pass
 
-    opcode = json.loads(open('../resources/opcodes.json').read())
-    codeline = codefile.readlines()
+    def compile_to_bin(self, file_name, binary_file_name):
+        assembly_program_raw = []
+        with open(file_name) as f:
+            assembly_program_raw = f.read().splitlines()
 
-    i = 0
-    for line in codeline:
-        if '#' not in line:
-            # remove comments
-            splitline = codeline[i].rstrip().split()
-            if splitline:
-                # remove white space
+        opcodes = json.loads(open('../resources/opcodes.json').read())
+
+        # remove comments/empty line
+        # find variables
+        assembly_program = []
+        variables = dict()
+        for line in assembly_program_raw:
+            if line and '#' not in line:
                 if '%' in line:
-                    # add f memory address names
-                    addrf[splitline[1]] = splitline[2].replace('0b', '')
-
-                elif len(splitline) == 1:
-                    # goto label
-                    labels[splitline[0]] = format(len(rawcode)+1, '024b')
-
-                # Bit test
-                elif 'BTS' in splitline[0]:
-                    BT = splitline[0].split(',')
-                    BT[1] = format(int(BT[1]), '04b') + \
-                        splitline[1].replace('0b', '')
-                    rawcode.append(BT)
-
-                # Bit set and clear
-                elif 'BS' in splitline[0] or 'BC' in splitline[0]:
-                    BT = splitline[0].split(',')
-                    BT[1] = format(int(BT[1]), '04b') + \
-                        splitline[1].replace('0b', '')
-                    rawcode.append(BT)
-
-                # literal values
-                elif '0b' in splitline[1]:
-                    splitline[1] = splitline[1].replace('0b', '')
-                    rawcode.append(splitline)
-
-                # replace goto label with binary
-                elif splitline[0] == 'GOTO':
-                    splitline[1] = labels[splitline[1]]
-                    rawcode.append(splitline)
-
-                # addr names
+                    line_split = line.rstrip().split()
+                    variables[line_split[1]] = line_split[2].replace('0b', '')
                 else:
-                    splitline[1] = addrf[splitline[1]]
-                    rawcode.append(splitline)
-        i = i + 1
+                    assembly_program.append(line.rstrip())
 
-    # print('Raw code:', rawcode)
+        # do a CALL/FN pass
+        functions = dict()
+        program_function_address = 0
+        counting = False
+        for line in assembly_program:
+            if 'FN' in line:
+                function_name = line.split()[1]
+                functions[function_name] = program_function_address
+                counting = True
+            elif 'RET' in line:
+                program_function_address += 1
+                counting = False
+            #skip goto labels
+            elif len(line) == 1:
+                pass
+            elif counting:
+                program_function_address += 1
+            else:
+                pass
+        if counting:
+            print('Missing RET statement')
+            exit()
 
-    i = 0
-    for line in rawcode:
-        binarycode.append(rawcode[i][1] + opcode[rawcode[i][0]])
-        i = i + 1
 
-    """
-    i = 0
-    for line in binarycode:
-        hexcode.append('%07X' % int(binarycode[i], 2))
-        i = i + 1
-    # print('Hex code:', hexcode)
-    """
+        #TODO variables in function scope?
+        binary_with_call = []
+        function_binary = []
+        current_binary = binary_with_call
 
-    i = 0
-    Hexfile = open('../programs/hexcode_16_bit.txt', 'w')
-    for line in binarycode:
-        Hexfile.write(binarycode[i] + '\n')
-        i = i + 1
+        global_goto_map = dict()
+        current_goto_map = global_goto_map
+        for line in assembly_program:
+            instructions = line.split()
+            mnemonic = instructions[0]
+            if len(instructions) > 1:
+                operand = instructions[1]
+            elif 'RET' in mnemonic:
+                current_binary.append('{0:024b}'.format(0) + opcodes[mnemonic])
+                current_goto_map = global_goto_map
+                current_binary = binary_with_call
+                continue
+            else:
+                current_goto_map[mnemonic] = len(binary_with_call) + 1
+                continue
 
-    Hexfile.close()
-    codefile.close()
+            # function call address calculated later
+            if 'CALL' in mnemonic:
+                binary_with_call.append(line)
+                continue
 
-compileGG()
+            if 'EQ' in mnemonic or 'LESS' in mnemonic or 'GRT' in mnemonic:
+                mnemonic_split = mnemonic.split(',')
+                opcode = opcodes[mnemonic_split[0]] + '{0:04b}'.format(int(mnemonic_split[1]))
+            elif 'FN' in mnemonic:
+                function_goto_map = dict()
+                current_goto_map = function_goto_map
+                current_binary = function_binary
+                continue
+            else:
+                opcode = opcodes[mnemonic]
+
+            literal = ''
+            if '0b' in operand:
+                literal = operand.replace('0b', '')
+            else:
+                if 'GOTO' in mnemonic:
+                    if operand in current_goto_map:
+                        literal = '{0:024b}'.format(current_goto_map[operand])
+                    else:
+                        print('GOTO label ' + operand + ' does not exist.')
+                        exit()
+                else:
+                    if operand in variables:
+                        literal = variables[operand]
+                    else:
+                        print('Variable ' + operand + ' does not exist.')
+                        exit()
+
+            current_binary.append(literal + opcode)
+
+        program_size = len(binary_with_call)
+        binary_with_call += function_binary
+        final_binary = []
+        for line in binary_with_call:
+            if 'CALL' in line:
+                opcode = opcodes['CALL']
+                literal = '{0:024b}'.format(functions[line.split()[1]] + program_size + 1)
+                final_binary.append(literal + opcode)
+            else:
+                final_binary.append(line)
+
+        with open(binary_file_name, 'w') as f:
+            f.write('\n'.join(line for line in final_binary))
+
+
+@click.command()
+@click.option('--assembly', '-a', help='Assembly file')
+@click.option('--binary', '-b', help='Name of the output binary file')
+def main(assembly, binary):
+    factorio_compiler = FactorioCompiler()
+    factorio_compiler.compile_to_bin(assembly, binary)
+
+
+if __name__ == '__main__':
+    main()

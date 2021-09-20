@@ -24,14 +24,25 @@ L to AwF = grey
 L to ArF = black
 
 
-Program Counter:
-Load PC = L
-L to PC = water
+Program counter:
+Load PC = steam
+value to PC = water
 
+Incr to PC = crude oil
+Conditional false = green check
+
+Function call stack:
+Stack & pointer write = red science pack
+increment pointer = green science pack
+decrement pointer = black science pack
+pointer = P
 
 ALU:
-ADD = repair pack
-SUB = boiler
+ADD  = repair pack
+SUB  = boiler
+EQ   = steam engine
+GRT  = solar panel
+LESS = accumulator 
 
 W to ALU1 = speed1
 F to ALU1 = eff1
