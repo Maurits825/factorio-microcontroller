@@ -62,7 +62,11 @@ class FactorioCompiler:
             if len(instructions) > 1:
                 operand = instructions[1]
             elif 'RET' in mnemonic:
-                current_binary.append('{0:024b}'.format(0) + opcodes[mnemonic])
+                if mnemonic == 'RET':
+                    literal = '{0:024b}'.format(0)
+                else:
+                    literal = self.get_literal(mnemonic, instructions[1], current_goto_map, variables)
+                current_binary.append(literal + opcodes[mnemonic])
                 current_goto_map = global_goto_map
                 current_binary = binary_with_call
                 continue
@@ -72,7 +76,7 @@ class FactorioCompiler:
 
             # function call address calculated later
             if 'CALL' in mnemonic:
-                binary_with_call.append(line)
+                current_binary.append(line)
                 continue
 
             if 'EQ' in mnemonic or 'LESS' in mnemonic or 'GRT' in mnemonic:
@@ -86,25 +90,11 @@ class FactorioCompiler:
             else:
                 opcode = opcodes[mnemonic]
 
-            literal = ''
-            if '0b' in operand:
-                literal = operand.replace('0b', '')
-            else:
-                if 'GOTO' in mnemonic:
-                    if operand in current_goto_map:
-                        literal = '{0:024b}'.format(current_goto_map[operand])
-                    else:
-                        print('GOTO label ' + operand + ' does not exist.')
-                        exit()
-                else:
-                    if operand in variables:
-                        literal = variables[operand]
-                    else:
-                        print('Variable ' + operand + ' does not exist.')
-                        exit()
+            literal = self.get_literal(mnemonic, operand, current_goto_map, variables)
 
             current_binary.append(literal + opcode)
 
+        binary_with_call += ['{0:032b}'.format(0)]
         program_size = len(binary_with_call)
         binary_with_call += function_binary
         final_binary = []
@@ -119,6 +109,28 @@ class FactorioCompiler:
         with open(binary_file_name, 'w') as f:
             f.write('\n'.join(line for line in final_binary))
 
+    def get_literal(self, mnemonic, operand, goto_map, variables):
+        literal = None
+        if '0b' in operand:
+            literal = operand.replace('0b', '')
+        else:
+            if 'GOTO' in mnemonic:
+                if operand in goto_map:
+                    literal = '{0:024b}'.format(goto_map[operand])
+                else:
+                    print('GOTO label ' + operand + ' does not exist.')
+                    exit()
+            else:
+                if operand in variables:
+                    literal = variables[operand]
+                else:
+                    print('Variable ' + operand + ' does not exist.')
+                    exit()
+        if literal:
+            return literal
+        else:
+            print('Error with literal')
+            exit()
 
 @click.command()
 @click.option('--assembly', '-a', help='Assembly file')

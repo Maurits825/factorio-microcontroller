@@ -14,7 +14,7 @@ W read  = pink
 
 ALU to W = K
 F to W   = cyan
-L to W   = copper
+L to W   = copper plate
 
 ALU to F = L
 W to F   = white
@@ -32,7 +32,7 @@ Incr to PC = crude oil
 Conditional false = green check
 
 Function call stack:
-Stack & pointer write = red science pack
+Stack & pointer write = red/white science pack
 increment pointer = green science pack
 decrement pointer = black science pack
 pointer = P
@@ -42,7 +42,11 @@ ADD  = repair pack
 SUB  = boiler
 EQ   = steam engine
 GRT  = solar panel
-LESS = accumulator 
+LESS = accumulator
+MUL  = nuclear reactor
+DIV  = heat pipe
+INCR = heat exchange
+DECR = steam turbine
 
 W to ALU1 = speed1
 F to ALU1 = eff1
