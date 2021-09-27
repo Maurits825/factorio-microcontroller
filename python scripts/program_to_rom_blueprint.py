@@ -4,17 +4,16 @@ import copy
 from base64 import b64decode, b64encode
 import click
 import pyperclip
-
-constant_comb_blueprint = "0eNp9UEuKwzAMvYvWTiFO0493PUcZipNqWkEiB0cJE4LvXrmBoZuZnSSe3m+FpptwiMQCbgVqA4/griuM9GDf5ZssA" \
-                          "4IDEuzBAPs+bxknnqVoQ98QewkRkgHiO/6AK9OXAWQhIdzo3sty46lvMCrgXyIDQxj1N3DWV77C1rvawKJTZXe1Ct0" \
-                          "pYrshrMkkEkN3a/DpZ1IGffumTjD+EWamKJNefm1siOKSQ7Rhym2Un3FSTvSuwH00ZmBWic3Fqdwfz/a4t1V1qg8pv" \
-                          "QAxenOf"
 max_signal_per_comb = 20
 bits = 32
+
 
 class Program2ROM:
 
     def __init__(self):
+        blueprint_string = self.load_blueprint_strings()
+        constant_comb_blueprint = blueprint_string['constant_combinator']
+
         self.rom_blueprint_template = self.decode_blueprint(constant_comb_blueprint)
         self.constant_comb_entity_template = copy.deepcopy(self.rom_blueprint_template['blueprint']['entities'][0])
         self.signal_template = copy.deepcopy(self.constant_comb_entity_template['control_behavior']['filters'][0])
@@ -24,6 +23,12 @@ class Program2ROM:
 
         self.signal_map = self.load_signal_map()
         self.signal_map_max = len(self.signal_map)
+
+    def load_blueprint_strings(self):
+        json_file = '../resources/blueprint_strings.json'
+        with open(json_file) as f:
+            blueprint_json = json.load(f)
+        return blueprint_json
 
     def load_signal_map(self):
         json_file = "../resources/signal_map.json"

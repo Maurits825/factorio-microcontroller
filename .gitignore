@@ -115,5 +115,5 @@ dmypy.json
 
 
 .idea/
-.resources/*.jpg
-.resources/*.png
+/resources/*.jpg
+/resources/*.png
