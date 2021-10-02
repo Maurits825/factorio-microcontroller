@@ -64,3 +64,5 @@ F to OUT2 = armor4
 
 OUT1 w = battery1
 OUT2 w = battery2
+
+PULSE  = belt immunity

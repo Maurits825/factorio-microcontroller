@@ -70,6 +70,8 @@ class FactorioCompiler:
                 current_goto_map = global_goto_map
                 current_binary = binary_with_call
                 continue
+            elif 'PULSE' in mnemonic:  #TODO better way to do this whole decoding thing
+                operand = instructions[1]
             else:
                 current_goto_map[mnemonic] = len(binary_with_call) + 1
                 continue
