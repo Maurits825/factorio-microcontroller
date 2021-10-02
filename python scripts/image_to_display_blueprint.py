@@ -7,6 +7,8 @@ import click
 import pyperclip
 from PIL import Image
 import numpy as np
+from PIL import Image, ImageSequence
+
 
 max_signal_per_comb = 20
 
@@ -17,6 +19,7 @@ class Img2Bp:
         self.display_tileable = blueprint_string['display_tileable']
         self.lamp_bp = blueprint_string['lamp']
         self.constant_comb_blueprint = blueprint_string['constant_combinator']
+        self.lcd_rom = blueprint_string['lcd_rom']
 
     def load_blueprint_strings(self):
         json_file = '../resources/blueprint_strings.json'
@@ -31,6 +34,17 @@ class Img2Bp:
     def encode_dict(self, blueprint_dict):
         data = json.dumps(blueprint_dict).encode('utf-8')
         return '0' + b64encode(zlib.compress(data)).decode('ascii')
+
+    def create_custom_bp(self):
+        bp = '0eNq9mm2O2yAQQO/Cb7MKY5w4kXqSahVhPElQbexivGq0ygF6i56tJylO2tUuKqpQNf4Tidh8PY2HB/Yra7oZR2esZ4dXZvRgJ3b4/Momc7aqW/7z1xHZgRmPPSuYVf1SmnrVdbxT/chuBTO2xW/sIG7PBUPrjTf4aOVeuB7t3Dfowg1/q1+wcZhClcEuvYVmeF0/VQW7sgPsn6rQfBiUd0N3bPCiXszglvu0cXo2/hiutW+VT8ZN/viPoav2RVmNLf/dBHv0MHm1MBBLoR+VU37piH1aLs8Tho66wYVZeTfjo4ZFvXQ8LT2J5cdh+37WJpTgVnwoy9vz7fbuvz9kIJdMTUFG67mfu/vMKaGIBIQyE0IpKCA4b7oO3ZX72TmkDQ8Zhcc2QUbmktmQkDH+0qM3mgcGjbErBMpHPGUCT5WLp6TAM03YN52xZ94rfTEWOZDS2UZ06gSdbS4dWIeOIKVTRnSqBJ1dLp2KgE6jvA8phxRIHQERmwSROpeIXCdeSlI8VYRnl6Czz6Wzo4sX3n8Bjl9nM/ZhlLSpeBOHDyQAiU0uoS0hoXXo7CI4+xSbXAMuKQy4wc5z0/ezDWNbK35iExYpFRa5LlzWJIxUqESKZB8TSXmxyBVjSSHGzWCCFtMGSezDIiXEIteIJYURN+bMsQsTc8GJx6FDWjqxDouUD4tcIZYUQtzMzqLjvbHLKt66sK2i5RMLsUgZschVYgl0fIyd0HnqJyvWYZHyYZErxJJCiPUFe6NVx8dOUa9MsRhDSoxFrhlLCjPWYVTOnOYzcbaJhVikjFjkKrGkUOJQQzv0tFAgtmBIWTDkWrDckkBRxDk3Nl+RUl/IVV+5p4mSKczwPjHuhmYgPv6NrReSB8C51itrKjwBxGoHfLEDQ8qBIdeBK0HCZxzDkj044jQTezCkPBhyPbja0GHRqiFWYIgVGFIKDLkKXFEosHZzizxsnHijnEPaXAyx/0LKfyHXfyugi5pgeNSrdiy/kJJfyJXfikJ+WzPpi3Jn5C2eMGwPVjqjgdiEy5QJQ64JVxQm3KI27ZJ31lmsIDZiSBkx5BpxRWHEbycTp7DRVJr2GStjMy5TZlzmmnG1pYSD9ry8XFjOQmmjJzZlSJlymWvK1Z4M0GCXt71/+1BiE+H5+f3Hf0ZQMmBy1biqKQNmtfMsiOW4fMjxc/EY2uHdtzsFe0E33ecDtZC7PexkuZX7kNJvvwCF7U9e'
+        lamps = self.decode_blueprint(bp)
+        signal_map = self.load_signal_map()
+
+        for count, entity in enumerate(lamps['blueprint']['entities']):
+            entity['control_behavior']['circuit_condition']['constant'] = 0
+            entity['control_behavior']['circuit_condition']['comparator'] = '≠'
+
+        print(self.encode_dict(lamps))
 
     def create_display_bp(self, width, height):
         #TODO this uses a blueprint of a array of light already wired, so this doesnt work
@@ -58,10 +72,14 @@ class Img2Bp:
         return signal_map
 
     def load_binary_image(self, image_name, x, y):
-        image_raw = Image.open(image_name).convert('L')
-        image_resize = image_raw.resize((x, y))
+        img = Image.open(image_name)
+        return self.convert_image(img, x, y)
+
+    def convert_image(self, image, x, y):
+        image_resize = image.resize((x, y)).convert('L')
+        #image_resize.show()
         np_img = np.array(image_resize)
-        np_img = np.where(np_img > 128, 255, 0)
+        np_img = np.where(np_img > 128, 1, 0)
         return np_img
 
     # this just make the rom, not the display
@@ -151,6 +169,7 @@ class Img2Bp:
 
                 # iterate over the sections in the tile
                 #TODO can make the tile 2 sections of 9*18=160 signals, will need to add virtual signals to signal map
+                #TODO magic numbers are total_sections=4, 2 section width = 18?, section width=9, section % 2-->remove i guess :)
                 for section in range(4):
                     constant_comb_idx = -1
                     signal_comb_idx = max_signal_per_comb + 1
@@ -219,23 +238,109 @@ class Img2Bp:
 
         return self.encode_dict(display_bp_final)
 
+    def create_LCD_rom_bp(self, gif_name):
+        lcd_width = 36
+        lcd_height = 32
+        bits = 32
+
+        #load gif
+        gif = Image.open(gif_name)
+        frames = np.array(
+            [np.array(self.convert_image(frame.copy(), lcd_width, lcd_height))
+             for frame in ImageSequence.Iterator(gif)])
+
+        signal_map = self.load_signal_map()
+        #TODO make this simpler/refactor repeated code
+        rom_blueprint_template = self.decode_blueprint(self.constant_comb_blueprint)
+        constant_comb_entity_template = copy.deepcopy(rom_blueprint_template['blueprint']['entities'][0])
+        signal_template = copy.deepcopy(constant_comb_entity_template['control_behavior']['filters'][0])
+
+        lcd_rom_template = self.decode_blueprint(self.lcd_rom)
+        final_rom = copy.deepcopy(lcd_rom_template)
+        final_rom['blueprint']['entities'].clear()
+
+        entity_count = len(lcd_rom_template['blueprint']['entities'])
+
+        for frame_count, frame in enumerate(frames):
+            current_rom_section = copy.deepcopy(lcd_rom_template)['blueprint']['entities']
+            signal_comb_idx = 1
+            constant_comb_entity_id = 2
+            current_constant_comb = current_rom_section[constant_comb_entity_id-1]
+            current_rom_section[constant_comb_entity_id-1]['control_behavior'] = {'filters': []}
+            for x in range(lcd_width):
+                value_str = ''
+                for binary in frame[:, x]:
+                    value_str += str(binary)
+                value_int = int(value_str, 2)
+                if (value_int & (1 << (bits - 1))) != 0:
+                    value_int = value_int - (1 << bits)
+                signal = copy.deepcopy(signal_template)
+                signal['signal']['type'] = signal_map[x]['type']
+                signal['signal']['name'] = signal_map[x]['name']
+                signal['count'] = value_int
+                signal['index'] = signal_comb_idx
+
+                current_constant_comb['control_behavior']['filters'].append(signal)
+                signal_comb_idx += 1
+
+                if signal_comb_idx > max_signal_per_comb:
+                    signal_comb_idx = 1
+                    constant_comb_entity_id += 1
+                    current_constant_comb = current_rom_section[constant_comb_entity_id-1]
+                    current_rom_section[constant_comb_entity_id-1]['control_behavior'] = {'filters': []}
+
+            # fix id and pos
+            # TODO make function?
+            entity_id_increment = frame_count * entity_count
+            for entity in current_rom_section:
+                entity['position']['x'] += frame_count
+                entity['entity_number'] += entity_id_increment
+                if 'connections' in entity:
+                    for _, connection in entity['connections'].items():
+                        for __, color in connection.items():
+                            for number in color:
+                                number['entity_id'] += entity_id_increment
+
+            # add wiring
+            if frame_count > 0:
+                current_rom_section[0]['connections']['1']['green'] = [{'entity_id': current_rom_section[0]['entity_number'] - entity_count, 'circuit_id': 1}]
+                current_rom_section[0]['connections']['2'] = {'red': [{'entity_id': current_rom_section[0]['entity_number'] - entity_count, 'circuit_id': 2}]}
+
+            # add frame_count number
+            current_rom_section[0]['control_behavior']['decider_conditions']['constant'] = frame_count + 1
+
+            # add current rom section
+            final_rom['blueprint']['entities'] += current_rom_section
+            # skip over next comb
+            constant_comb_entity_id += 1
+
+        return self.encode_dict(final_rom)
+
 
 @click.command()
 @click.option('--img', '-i', help='Name of the image file')
-@click.option('--width', '-w', help='Width of the blueprint', default=10)
-@click.option('--height', '-h', help='Length of the blueprint',  default=10)
+@click.option('--gif', '-f', help='Name of the gif file')
+@click.option('--width', '-w', help='Width of the image blueprint', default=10)
+@click.option('--height', '-h', help='Height of the image blueprint',  default=10)
 @click.option('--clipboard', '-c', help='Copy blueprint to the clipboard', is_flag=True)
-def main(img, width, height, clipboard):
+def main(img, gif, width, height, clipboard):
     img_2_bp = Img2Bp()
+    #img_2_bp.create_custom_bp()
+
+    blueprint = ''
     if img:
         blueprint = img_2_bp.convert_image_using_tilable(img, width, height)
-        if clipboard:
-            pyperclip.copy(blueprint)
-            print('Image blueprint copied to clipboard')
-        else:
-            print(blueprint)
+    elif gif:
+        blueprint = img_2_bp.create_LCD_rom_bp(gif)
     else:
         print("Incorrect input args, see --help")
+        exit()
+
+    if clipboard:
+        pyperclip.copy(blueprint)
+        print('Blueprint copied to clipboard')
+    else:
+        print(blueprint)
 
 
 if __name__ == '__main__':
