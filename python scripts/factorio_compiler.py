@@ -6,6 +6,7 @@ class FactorioCompiler:
     def __init__(self):
         pass
 
+    #TODO rewrite to remove duplicate code, make if branching simpler
     def compile_to_bin(self, file_name, binary_file_name):
         assembly_program_raw = []
         with open(file_name) as f:
@@ -59,6 +60,7 @@ class FactorioCompiler:
         for line in assembly_program:
             instructions = line.split()
             mnemonic = instructions[0]
+            # TODO operand is literal?
             if len(instructions) > 1:
                 operand = instructions[1]
             elif 'RET' in mnemonic:
