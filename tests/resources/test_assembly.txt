@@ -1,8 +1,5 @@
 #random op codes, just for testing the compiler
 
-% a 0b000000000000000000000001
-% input_n 0b000000000000000000000100
-
 MOVLW 0b000000000000000000000001
 MOVWF a
 
@@ -23,7 +20,6 @@ GOTO fn_label
 RETFW input_n
 
 another_loop
-% var_b 0b000000000000000000001100
 MOVLW 0b111111111111111111111011
 MOVWF var_b
 WOUTF,1 var_b

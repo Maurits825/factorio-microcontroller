@@ -14,13 +14,11 @@ class FactorioCompiler:
         with open(file_name) as f:
             assembly_program_raw = f.read().splitlines()
 
-        # find variables TODO remove comment later
-        assembly_program, variables = self.remove_comments_and_blank_lines(assembly_program_raw)
+        assembly_program = self.remove_comments_and_blank_lines(assembly_program_raw)
 
         functions = self.calculate_function_address(assembly_program)
 
-        #TODO variables in function scope?
-        binary_with_call, function_binary = self.decode_instructions(assembly_program, variables)
+        binary_with_call, function_binary = self.decode_instructions(assembly_program)
 
         # add halt between program memory and function memory
         binary_with_call += ['{0:032b}'.format(0)]
@@ -33,18 +31,12 @@ class FactorioCompiler:
             f.write('\n'.join(line for line in final_binary))
 
     def remove_comments_and_blank_lines(self, assembly):
-        variables = dict()
         assembly_stripped = []
         for line in assembly:
             if line and '#' not in line:
-                if '%' in line:
-                    #TODO remove this, vars will be handled differently in the future
-                    line_split = line.rstrip().split()
-                    variables[line_split[1]] = line_split[2].replace('0b', '')
-                else:
-                    assembly_stripped.append(line.rstrip())
+                assembly_stripped.append(line.rstrip())
 
-        return assembly_stripped, variables
+        return assembly_stripped
 
     def calculate_function_address(self, assembly):
         functions = dict()
@@ -82,14 +74,20 @@ class FactorioCompiler:
                 final_binary.append(line)
         return final_binary
 
-    def decode_instructions(self, assembly, variables):
-        # TODO variables in function scope?
+    def decode_instructions(self, assembly):
         binary_with_call = []
         function_binary = []
         current_binary = binary_with_call
 
         global_goto_map = dict()
         current_goto_map = global_goto_map
+
+        global_variables_map = dict()
+        current_variable_map = global_variables_map
+
+        global_variable_address = [1]
+        current_variable_address = global_variable_address
+
         for line in assembly:
             instructions = line.split()
             mnemonic = instructions[0]
@@ -100,17 +98,26 @@ class FactorioCompiler:
             elif mnemonic == 'FN':
                 function_goto_map = dict()
                 current_goto_map = function_goto_map
+
+                function_variable_map = dict()
+                current_variable_map = function_variable_map
+
+                current_variable_address = [1]
+
                 current_binary = function_binary
             elif len(instructions) == 1 and mnemonic not in self.opcodes:
                 current_goto_map[mnemonic] = len(binary_with_call) + 1
             else:
                 opcode = self.get_opcode(mnemonic)
-                literal = self.get_literal(mnemonic, instructions, current_goto_map, variables)
+                literal = self.get_literal(mnemonic, instructions, current_goto_map, current_variable_map,
+                                           current_variable_address)
                 current_binary.append(literal + opcode)
 
             # switch back scopes if returning from function
             if 'RET' in mnemonic:
                 current_goto_map = global_goto_map
+                current_variable_map = global_variables_map
+                current_variable_address = global_variable_address
                 current_binary = binary_with_call
                 continue
 
@@ -125,19 +132,15 @@ class FactorioCompiler:
 
         return opcode
 
-    def get_literal(self, mnemonic, instructions, goto_map, variables):
-        literal = None
+    def get_literal(self, mnemonic, instructions, goto_map, variables, variable_address):
         if mnemonic == 'RET' or mnemonic == 'PULSE':
             literal = '{0:024b}'.format(0)
-        elif len(instructions) > 1: #TODO change to just else maybe when it works?
-            literal = self.get_literal_from_operand(mnemonic, instructions[1], goto_map, variables)
         else:
-            print("Error getting literal from: " + instructions)
-            exit()
+            literal = self.get_literal_from_operand(mnemonic, instructions[1], goto_map, variables, variable_address)
 
         return literal
 
-    def get_literal_from_operand(self, mnemonic, operand, goto_map, variables):
+    def get_literal_from_operand(self, mnemonic, operand, goto_map, variables, variable_address):
         literal = None
         if '0b' in operand:
             literal = operand.replace('0b', '')
@@ -149,11 +152,10 @@ class FactorioCompiler:
                     print('GOTO label ' + operand + ' does not exist.')
                     exit()
             else:
-                if operand in variables:
-                    literal = variables[operand]
-                else:
-                    print('Variable ' + operand + ' does not exist.')
-                    exit()
+                if operand not in variables:
+                    variables[operand] = variable_address[0]
+                    variable_address[0] += 1
+                literal = '{0:024b}'.format(variables[operand])
         if literal:
             return literal
         else:
