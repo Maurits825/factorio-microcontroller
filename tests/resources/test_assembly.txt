@@ -1,0 +1,41 @@
+#random op codes, just for testing the compiler
+
+% a 0b000000000000000000000001
+% input_n 0b000000000000000000000100
+
+MOVLW 0b000000000000000000000001
+MOVWF a
+
+CALL fib
+
+loop
+DECRF a
+WOUTF,2 a
+PULSE a
+GOTO loop
+
+FN fib
+MOVLW 0b000000000000000000000010
+# 2 > input_n
+fn_label
+GRTWF,1 input_n
+GOTO fn_label
+RETFW input_n
+
+another_loop
+% var_b 0b000000000000000000001100
+MOVLW 0b111111111111111111111011
+MOVWF var_b
+WOUTF,1 var_b
+GOTO another_loop
+
+FN another_fn
+PULSE a
+RETLW 0b000000000000000000001100
+
+CALL another_fn
+CALL foo
+
+FN foo
+ROLF a
+RET

@@ -2,6 +2,9 @@ import json
 import click
 
 
+OPCODES_FILE = "../resources/opcodes.json"
+
+
 class FactorioCompiler:
     def __init__(self):
         pass
@@ -12,7 +15,8 @@ class FactorioCompiler:
         with open(file_name) as f:
             assembly_program_raw = f.read().splitlines()
 
-        opcodes = json.loads(open('../resources/opcodes.json').read())
+        with open(OPCODES_FILE) as opcodes:
+            opcodes = json.loads(opcodes.read())
 
         # remove comments/empty line
         # find variables
@@ -61,9 +65,7 @@ class FactorioCompiler:
             instructions = line.split()
             mnemonic = instructions[0]
             # TODO operand is literal?
-            if len(instructions) > 1:
-                operand = instructions[1]
-            elif 'RET' in mnemonic:
+            if 'RET' in mnemonic:
                 if mnemonic == 'RET':
                     literal = '{0:024b}'.format(0)
                 else:
@@ -72,6 +74,9 @@ class FactorioCompiler:
                 current_goto_map = global_goto_map
                 current_binary = binary_with_call
                 continue
+            elif len(instructions) > 1:
+                operand = instructions[1]
+
             elif 'PULSE' in mnemonic:  #TODO better way to do this whole decoding thing
                 operand = instructions[1]
             else:
