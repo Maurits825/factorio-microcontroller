@@ -11,7 +11,7 @@ CALL fib
 loop
 DECRF a
 WOUTF,2 a
-PULSE a
+PULSE
 GOTO loop
 
 FN fib
@@ -30,7 +30,7 @@ WOUTF,1 var_b
 GOTO another_loop
 
 FN another_fn
-PULSE a
+PULSE
 RETLW 0b000000000000000000001100
 
 CALL another_fn
