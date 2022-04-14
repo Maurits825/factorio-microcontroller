@@ -3,7 +3,7 @@ This project contains scripts and docs for a microcontroller made in the game [F
 
 ## Overview
 ![factorio microcontroller](img/factorio-cpu.png)
-Screenshot of the microntroller showing each part.
+Screenshot of the microcontroller showing each part.
 
 ## Getting Started
 
