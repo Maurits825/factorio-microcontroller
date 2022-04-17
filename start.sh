@@ -1,5 +1,5 @@
 #!/bin/sh
 . venv/Scripts/activate
-cd "python scripts"
+cd "factorio_microcontroller"
 python factorio_microcontroller.py --help
 $SHELL
