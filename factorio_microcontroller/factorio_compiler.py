@@ -144,18 +144,28 @@ class FactorioCompiler:
         literal = None
         if '0b' in operand:
             literal = operand.replace('0b', '')
+            #TODO we can still hard code memory addresses? need to check this and give an error
         else:
-            if 'GOTO' in mnemonic:
+            if mnemonic == 'GOTO':
                 if operand in goto_map:
                     literal = '{0:024b}'.format(goto_map[operand])
                 else:
                     print('GOTO label ' + operand + ' does not exist.')
                     exit()
-            else:
-                if operand not in variables:
+            elif mnemonic == 'VAR':
+                if operand in variables:
+                    print('Variable ' + operand + ' already exists.')
+                    exit()
+                else:
                     variables[operand] = variable_address[0]
                     variable_address[0] += 1
-                literal = '{0:024b}'.format(variables[operand])
+                    literal = '{0:024b}'.format(variables[operand])
+            else:
+                if operand in variables:
+                    literal = '{0:024b}'.format(variables[operand])
+                else:
+                    print('Variable ' + operand + ' does not exist.')
+                    exit()
         if literal:
             return literal
         else:

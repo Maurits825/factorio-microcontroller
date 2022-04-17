@@ -1,5 +1,6 @@
 #random op codes, just for testing the compiler
-
+VAR a
+VAR var_b
 MOVLW 0b000000000000000000000001
 MOVWF a
 
@@ -12,6 +13,7 @@ PULSE
 GOTO loop
 
 FN fib
+VAR input_n
 MOVLW 0b000000000000000000000010
 # 2 > input_n
 fn_label
@@ -33,5 +35,6 @@ CALL another_fn
 CALL foo
 
 FN foo
+VAR a
 ROLF a
 RET
