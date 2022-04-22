@@ -1,3 +1,5 @@
+![Checks](https://github.com/Maurits825/factorio-microcontroller/actions/workflows/factorio-microcontroller.yml/badge.svg)
+
 # Factorio-Microcontroller
 This project contains scripts and docs for a microcontroller made in the game [Factorio](https://www.factorio.com/).
 
