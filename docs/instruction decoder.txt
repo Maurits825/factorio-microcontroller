@@ -44,7 +44,7 @@ Load PC = steam
 value to PC = water
 
 Incr to PC = crude oil
-Conditional false = green check
+Conditional false = green check & lubricant
 program count = C
 
 Function call stack:
