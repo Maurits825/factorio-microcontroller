@@ -5,12 +5,28 @@ A = address
 w = write
 r = read
 L = literal
+------------
+
+global reset = R
+every cycle write = W
+second cycle write = Z
 
 Memory:
-F write = green
-W write = blue
+F write = green, clock write = iron ore
+W write = blue, clock write = uranium ore
 F read  = yellow
 W read  = pink
+
+Literal = V
+ALU result = satellite
+
+F Data in = F
+F Data out = G
+F address w = A
+F address r = B
+
+W Data in = X
+W Data out = Y
 
 ALU to W = K
 F to W   = cyan
@@ -23,21 +39,30 @@ L to F   = M
 L to AwF = grey
 L to ArF = black
 
-
 Program counter:
 Load PC = steam
 value to PC = water
 
 Incr to PC = crude oil
 Conditional false = green check
+program count = C
 
 Function call stack:
-Stack & pointer write = red/white science pack
+Stack & pointer write = white sp, clock write = red sp
 increment pointer = green science pack
-decrement pointer = black science pack
+decrement pointer/load call stack to pc = black science pack
 pointer = P
 
+Variable scope stack:
+Stack = uraniun fuel cell, clock write = used up ufc
+pointer write = uraninum-235, clock write = uraninum-238
+increment pointer = blue science pack
+decrement pointer = purple science pack
+pointer = Q
+
 ALU:
+Input 1/2 = 1/2
+
 ADD  = repair pack
 SUB  = boiler
 EQ   = steam engine
@@ -56,13 +81,14 @@ F to ALU2 = eff2
 L to ALU2 = prod2
 
 I/O
+out1/out2 value = 3/4
 L to OUT1 = armor1
 F to OUT1 = armor2
 
 L to OUT2 = armor3
 F to OUT2 = armor4
 
-OUT1 w = battery1
-OUT2 w = battery2
+OUT1 w = battery1, clock write = energy shield 1
+OUT2 w = battery2, clock write = energy shield 2
 
-PULSE  = belt immunity
+PULSE = belt immunity, clock write = exoskeleton
