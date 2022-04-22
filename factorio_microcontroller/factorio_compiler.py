@@ -1,13 +1,13 @@
 import json
 import click
+from pathlib import Path
 
-
-OPCODES_FILE = "../resources/opcodes.json"
+RESOURCE_FOLDER = Path(__file__).parent.parent / "resources"
 
 
 class FactorioCompiler:
     def __init__(self):
-        with open(OPCODES_FILE) as opcodes:
+        with open(RESOURCE_FOLDER / "opcodes.json") as opcodes:
             self.opcodes = json.loads(opcodes.read())
 
     def compile_to_bin(self, file_name, binary_file_name):

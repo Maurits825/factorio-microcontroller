@@ -1,5 +1,3 @@
-import os
-
 from factorio_microcontroller.factorio_compiler import FactorioCompiler
 import unittest
 import filecmp
@@ -17,3 +15,7 @@ class FactorioCompilerTest(unittest.TestCase):
         self.assertTrue(filecmp.cmp("./resources/test_bin_expected.txt", "./resources/test_bin_actual.txt"))
 
         os.remove(actual_assembly_file)
+
+
+if __name__ == '__main__':
+    unittest.main()
