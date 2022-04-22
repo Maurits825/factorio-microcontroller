@@ -1,0 +1,40 @@
+# compute the nth Fibonacci number
+MOVLW 0d10
+CALL fibonacci
+
+FN fibonacci
+# store input value n
+VAR n
+MOVWF n
+
+# if (n <= 1), n < 2, F < W, W > F
+MOVLW 0d2
+GRTWF,0 n
+RETFW n
+
+# return fib(n-1) + fib(n-2);
+VAR n_minus_1
+MOVFW n
+MOVWF n_minus_1
+DECRF n_minus_1
+
+VAR n_minus_2
+MOVWF n_minus_2
+DECRF n_minus_2
+DECRF n_minus_2
+
+MOVFW n_minus_1
+CALL fibonacci
+VAR ret_1
+MOVWF ret_1
+
+MOVFW n_minus_2
+CALL fibonacci
+VAR ret_2
+MOVWF ret_2
+
+MOVFW ret_1
+ADDWF,f ret_2
+WOUTF,2 ret_2
+RETFW ret_2
+END

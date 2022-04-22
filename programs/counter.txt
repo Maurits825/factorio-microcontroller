@@ -1,0 +1,15 @@
+VAR counter
+GOTO reset
+
+loop
+GRTWF,2 counter
+INCRF counter
+WOUTF,2 counter
+GOTO loop
+GOTO reset
+
+reset
+MOVLW 0d0
+MOVWF counter
+MOVLW 0d9
+GOTO loop
