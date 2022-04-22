@@ -47,8 +47,7 @@ class FactorioCompiler:
                 function_name = line.split()[1]
                 functions[function_name] = program_function_address
                 counting = True
-            elif 'RET' in line:
-                program_function_address += 1
+            elif 'END' in line:
                 counting = False
             # skip goto labels
             elif len(line) == 1:
@@ -106,7 +105,8 @@ class FactorioCompiler:
 
                 current_binary = function_binary
             elif len(instructions) == 1 and mnemonic not in self.opcodes:
-                current_goto_map[mnemonic] = len(binary_with_call) + 1
+                if mnemonic != 'END':
+                    current_goto_map[mnemonic] = len(binary_with_call) + 1
             else:
                 opcode = self.get_opcode(mnemonic)
                 literal = self.get_literal(mnemonic, instructions, current_goto_map, current_variable_map,
@@ -114,7 +114,7 @@ class FactorioCompiler:
                 current_binary.append(literal + opcode)
 
             # switch back scopes if returning from function
-            if 'RET' in mnemonic:
+            if 'END' in mnemonic:
                 current_goto_map = global_goto_map
                 current_variable_map = global_variables_map
                 current_variable_address = global_variable_address

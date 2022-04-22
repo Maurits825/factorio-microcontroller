@@ -84,11 +84,11 @@ class Program2ROM:
         comb_count = len(rom_blueprint['blueprint']['entities'])
         for idx, combinator in enumerate(rom_blueprint['blueprint']['entities']):
             if idx == 0:
-                combinator['connections'] = {'1': {'red': [{'entity_id': 2}]}}
+                combinator['connections'] = {'1': {'green': [{'entity_id': 2}]}}
             elif idx == comb_count-1:
-                combinator['connections'] = {'1': {'red': [{'entity_id': idx}]}}
+                combinator['connections'] = {'1': {'green': [{'entity_id': idx}]}}
             else:
-                combinator['connections'] = {'1': {'red': [{'entity_id': idx}, {'entity_id': idx+2}]}}
+                combinator['connections'] = {'1': {'green': [{'entity_id': idx}, {'entity_id': idx+2}]}}
 
         return self.encode_dict(rom_blueprint)
 
