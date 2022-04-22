@@ -119,3 +119,4 @@ dmypy.json
 /resources/*.png
 /resources/*.gif
 /programs/*binary*.txt
+todo.txt

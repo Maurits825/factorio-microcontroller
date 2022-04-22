@@ -65,7 +65,7 @@ class Img2Bp:
 
         return self.encode_dict(display_json)
 
-    def load_signal_map(self):
+    def load_signal_map(self): #TODO make this a class var?
         json_file = "../resources/signal_map.json"
         with open(json_file) as f:
             signal_map = json.load(f)
