@@ -7,6 +7,7 @@ with open('../resources/raw.txt', 'r') as file:
 data = lua.decode(raw_data)
 
 signals = []
+#TODO can also add fluids here maybe?
 for item in data['item']:
     if 'flags' in data['item'][item] and data['item'][item]['flags'][0] == 'hidden':
         continue
