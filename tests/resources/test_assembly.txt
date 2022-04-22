@@ -1,7 +1,7 @@
 #random op codes, just for testing the compiler
 VAR a
 VAR var_b
-MOVLW 0b000000000000000000000001
+MOVLW 0xABCDEF
 MOVWF a
 
 CALL fib
@@ -14,7 +14,7 @@ GOTO loop
 
 FN fib
 VAR input_n
-MOVLW 0b000000000000000000000010
+MOVLW 0d2
 # 2 > input_n
 fn_label
 GRTWF,1 input_n

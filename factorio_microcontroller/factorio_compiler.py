@@ -142,9 +142,13 @@ class FactorioCompiler:
 
     def get_literal_from_operand(self, mnemonic, operand, goto_map, variables, variable_address):
         literal = None
+        # TODO we can still hard code memory addresses? could check this and give an error
         if '0b' in operand:
             literal = operand.replace('0b', '')
-            #TODO we can still hard code memory addresses? need to check this and give an error
+        elif '0x' in operand:
+            literal = '{0:024b}'.format(int(operand, 16))
+        elif '0d' in operand:
+            literal = '{0:024b}'.format(int(operand.replace('0d', '')))
         else:
             if mnemonic == 'GOTO':
                 if operand in goto_map:
