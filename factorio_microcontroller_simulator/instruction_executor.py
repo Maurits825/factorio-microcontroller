@@ -7,20 +7,37 @@ class MicrocontrollerState:
     f_memory: dict[int]
 
 
+ALU_OPERATIONS = [
+    "ADD", "SUB", "MUL", "DIV",
+    "MOD", "INCR", "DECR",
+    "ROL", "ROR",
+    "NAND", "NOR", "XOR",
+]
+
+
 class InstructionExecutor:
     def __init__(self):
         pass
 
     def execute(self, opcode: str, literal: int, state: MicrocontrollerState):
-        #just a huge if statement?
+        if any(alu_op in opcode for alu_op in ALU_OPERATIONS):
+            self.execute_alu_operation(opcode, literal, state)
+        else:
+            pass
+
+    def execute_alu_operation(self, opcode: str, literal: int, state: MicrocontrollerState):
+        store, load = self.get_load_and_store_location(opcode)
+
+        input_a = state.w_register
+        input_b = self.load_from_location(load, literal, state)
+
         if 'ADD' in opcode:
-            store, load = self.get_load_and_store_location(opcode)
-
-            input_a = state.w_register
-            input_b = self.load_from_location(load, literal, state)
-
             result = input_a + input_b
-            self.store_at_location(store, literal, result, state)
+        elif 'SUB' in opcode:
+            result = input_a - input_b
+        else:
+            raise Exception("Unknown alu operation.")
+        self.store_at_location(store, literal, result, state)
 
     def get_load_and_store_location(self, opcode):
         if ',' in opcode:
