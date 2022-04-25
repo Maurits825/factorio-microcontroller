@@ -16,14 +16,33 @@ ALU_OPERATIONS = [
 
 
 class InstructionExecutor:
-    def __init__(self):
-        pass
-
     def execute(self, opcode: str, literal: int, state: MicrocontrollerState):
         if any(alu_op in opcode for alu_op in ALU_OPERATIONS):
             self.execute_alu_operation(opcode, literal, state)
+        elif 'MOV' in opcode:
+            self.execute_memory_operation(opcode, literal, state)
+
+    def execute_memory_operation(self, opcode: str, literal: int, state: MicrocontrollerState):
+        if opcode == 'MOVLW':
+            store = 'w'
+            address = 0
+            value = literal
+        elif opcode == 'MOVWF':
+            store = 'f'
+            address = literal
+            value = state.w_register
+        elif opcode == 'MOVFW':
+            store = 'w'
+            address = literal
+            value = state.f_memory[address]
+        elif opcode == 'MOVLF':
+            store = 'f'
+            address = state.w_register
+            value = literal
         else:
-            pass
+            raise Exception("Unknown memory operation.")
+
+        self.store_at_location(store, address, value, state)
 
     def execute_alu_operation(self, opcode: str, literal: int, state: MicrocontrollerState):
         store, load = self.get_load_and_store_location(opcode)
@@ -35,8 +54,33 @@ class InstructionExecutor:
             result = input_a + input_b
         elif 'SUB' in opcode:
             result = input_a - input_b
+        elif 'MUL' in opcode:
+            result = input_a * input_b
+        elif 'DIV' in opcode:
+            result = int(input_a / input_b)
+        elif 'MOD' in opcode:
+            result = int(input_a % input_b)
+        elif 'INCR' in opcode:
+            result = state.f_memory[literal] + 1
+            store = 'f'
+        elif 'DECR' in opcode:
+            result = state.f_memory[literal] - 1
+            store = 'f'
+        elif 'ROL' in opcode:
+            result = state.f_memory[literal] << 1
+            store = 'f'
+        elif 'ROR' in opcode:
+            result = state.f_memory[literal] >> 1
+            store = 'f'
+        elif 'NAND' in opcode:
+            result = ~ (input_a & input_b)
+        elif 'NOR' in opcode:
+            result = ~ (input_a | input_b)
+        elif 'XOR' in opcode:
+            result = input_a ^ input_b
         else:
             raise Exception("Unknown alu operation.")
+
         self.store_at_location(store, literal, result, state)
 
     def get_load_and_store_location(self, opcode):
@@ -62,8 +106,8 @@ class InstructionExecutor:
 
         return value
 
-    def store_at_location(self, location, literal, value, state):
+    def store_at_location(self, location, address, value, state):
         if location == 'f':
-            state.f_memory[literal] = value
+            state.f_memory[address] = value
         else:
             state.w_register = value
