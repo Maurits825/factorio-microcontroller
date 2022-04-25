@@ -12,6 +12,15 @@ class MicrocontrollerState:
     variable_offset: int
     output_registers: []
 
+    def __init__(self):
+        self.w_register = 0
+        self.f_memory = dict()
+        self.program_counter = 1
+        self.function_call_stack = []
+        self.variable_scope_stack = [0]
+        self.variable_offset = 0
+        self.output_registers = [0, 0]
+
 
 ALU_OPERATIONS = [
     "ADD", "SUB", "MUL", "DIV",
@@ -62,7 +71,7 @@ class InstructionExecutor:
 
     def execute_output_operation(self, opcode: str, literal: int, state: MicrocontrollerState):
         opcode_split = opcode.split(',')
-        output_index = opcode_split[1]
+        output_index = int(opcode_split[1]) - 1
         load = opcode_split[0][-1]
 
         if load == 'L':
@@ -98,10 +107,12 @@ class InstructionExecutor:
             if skip:
                 skip_count = int(opcode_split[1])
                 state.program_counter += skip_count + 2
+            else:
+                state.program_counter += 1
 
         elif opcode == 'CALL':
             state.function_call_stack.append(state.program_counter + 1)
-            state.variable_scope_stack.append(state.variable_scope_stack.top() +
+            state.variable_scope_stack.append(state.variable_scope_stack[-1] +
                                               state.variable_offset)
             state.program_counter = literal
 
@@ -217,7 +228,7 @@ class InstructionExecutor:
             state.w_register = value
 
     def read_f_memory(self, address, state: MicrocontrollerState):
-        return state.f_memory[address + state.variable_scope_stack.top()]
+        return state.f_memory[address + state.variable_scope_stack[-1]]
 
     def write_f_memory(self, address, value, state: MicrocontrollerState):
-        state.f_memory[address + state.variable_scope_stack.top()] = value
+        state.f_memory[address + state.variable_scope_stack[-1]] = value

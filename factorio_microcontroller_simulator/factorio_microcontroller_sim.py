@@ -13,6 +13,7 @@ class FactorioMicrocontrollerSim:
     def __init__(self, file_name):
         self.binary = self.load_binary(file_name)
         self.opcode_map = self.load_opcode_map()
+        self.decoded_instructions = self.decode_all_instructions()
 
         self.instruction_executor = InstructionExecutor()
 
@@ -21,13 +22,23 @@ class FactorioMicrocontrollerSim:
             return f.read().splitlines()
 
     def simulate(self):
-        microcontroller_state = MicrocontrollerState(0, dict(), 1, [], [0], 0, [])
+        microcontroller_state = MicrocontrollerState()
 
         while True:
-            instruction = self.binary[microcontroller_state.program_counter-1]
-            opcode, literal = self.decode_instruction(instruction)
+            opcode, literal = self.decoded_instructions[microcontroller_state.program_counter-1]
+            is_halt = self.instruction_executor.execute(opcode, literal, microcontroller_state)
 
-            self.instruction_executor.execute(opcode, literal, microcontroller_state)
+            print("Program count: " + str(microcontroller_state.program_counter))
+            print("Output register: " + str(microcontroller_state.output_registers))
+
+            if is_halt:
+                return
+
+    def decode_all_instructions(self):
+        decoded_instructions = []
+        for instruction in self.binary:
+            decoded_instructions.append(self.decode_instruction(instruction))
+        return decoded_instructions
 
     def decode_instruction(self, line):
         literal_binary = line[:24]
