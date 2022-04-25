@@ -9,6 +9,8 @@ class MicrocontrollerState:
     program_counter: int
     function_call_stack: []
     variable_scope_stack: []
+    variable_offset: int
+    output_registers: []
 
 
 ALU_OPERATIONS = [
@@ -23,15 +25,52 @@ BRANCHING_OPERATIONS = [
     "CALL", "RET", "GOTO",
 ]
 
+OTHER_OPERATIONS = [
+    "NOP", "PULSE",
+]
+
 
 class InstructionExecutor:
     def execute(self, opcode: str, literal: int, state: MicrocontrollerState):
+        if opcode == 'HALT':
+            return True
+
         if any(alu_op in opcode for alu_op in ALU_OPERATIONS):
             self.execute_alu_operation(opcode, literal, state)
-        elif 'MOV' in opcode:
-            self.execute_memory_operation(opcode, literal, state)
-        if any(branching_op in opcode for branching_op in BRANCHING_OPERATIONS):
+
+        elif any(branching_op in opcode for branching_op in BRANCHING_OPERATIONS):
             self.execute_branching_operation(opcode, literal, state)
+
+        elif any(other_op in opcode for other_op in OTHER_OPERATIONS):
+            self.execute_other_operation(opcode, literal, state)
+
+        elif 'MOV' in opcode or opcode == 'VAR':
+            self.execute_memory_operation(opcode, literal, state)
+
+        elif 'WOUT' in opcode:
+            self.execute_output_operation(opcode, literal, state)
+        else:
+            raise Exception("Unknown instruction.")
+
+    def execute_other_operation(self, opcode: str, literal: int, state: MicrocontrollerState):
+        if opcode == 'NOP':
+            pass
+        elif opcode == 'PULSE':
+            pass
+
+        state.program_counter += 1
+
+    def execute_output_operation(self, opcode: str, literal: int, state: MicrocontrollerState):
+        opcode_split = opcode.split(',')
+        output_index = opcode_split[1]
+        load = opcode_split[0][-1]
+
+        if load == 'L':
+            state.output_registers[output_index] = literal
+        else:
+            state.output_registers[output_index] = self.read_f_memory(literal, state)
+
+        state.program_counter += 1
 
     def execute_branching_operation(self, opcode: str, literal: int, state: MicrocontrollerState):
         if any(conditional_op in opcode for conditional_op in ["GRT", "LESS", "EQ"]):
@@ -62,7 +101,8 @@ class InstructionExecutor:
 
         elif opcode == 'CALL':
             state.function_call_stack.append(state.program_counter + 1)
-            state.variable_scope_stack.append(state.variable_scope_stack.top())
+            state.variable_scope_stack.append(state.variable_scope_stack.top() +
+                                              state.variable_offset)
             state.program_counter = literal
 
         elif opcode == 'GOTO':
@@ -80,7 +120,12 @@ class InstructionExecutor:
             state.variable_scope_stack.pop()
 
     def execute_memory_operation(self, opcode: str, literal: int, state: MicrocontrollerState):
-        if opcode == 'MOVLW':
+        if opcode == 'VAR':
+            state.variable_offset = literal
+            state.program_counter += 1
+            return
+
+        elif opcode == 'MOVLW':
             store = 'w'
             address = 0
             value = literal

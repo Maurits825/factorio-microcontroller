@@ -21,7 +21,7 @@ class FactorioMicrocontrollerSim:
             return f.read().splitlines()
 
     def simulate(self):
-        microcontroller_state = MicrocontrollerState(0, dict(), 1, [], [0])
+        microcontroller_state = MicrocontrollerState(0, dict(), 1, [], [0], 0, [])
 
         while True:
             instruction = self.binary[microcontroller_state.program_counter-1]
