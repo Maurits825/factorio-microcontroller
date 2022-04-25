@@ -28,11 +28,11 @@ class FactorioMicrocontrollerSim:
             opcode, literal = self.decoded_instructions[microcontroller_state.program_counter-1]
             is_halt = self.instruction_executor.execute(opcode, literal, microcontroller_state)
 
-            print("Program count: " + str(microcontroller_state.program_counter))
-            print("Output register: " + str(microcontroller_state.output_registers))
+            #print("Program count: " + str(microcontroller_state.program_counter))
+            #print("Output register: " + str(microcontroller_state.output_registers))
 
             if is_halt:
-                return
+                return microcontroller_state
 
     def decode_all_instructions(self):
         decoded_instructions = []
