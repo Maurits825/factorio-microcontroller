@@ -20,9 +20,9 @@ For example: `python factorio_microcontroller.py -a ../programs/counter.txt -c`
 This also creates a binary file name _file_name_binary_ in the programs folder.
 
 ### Run a Program
-Import the blueprint into Factorio. Place it on the left side of the ROM. Connect it to the microcontroller as shown below.  
-_img_placeholder_  
+Import the blueprint into Factorio. Place it on the left side of the ROM. Connect it to the constant combinator with the signal `i` as shown below.  
+![program memory](img/program-memory.png)
 
 Turn the reset combinator on and off to reset the microcontroller. Enable the clock to start the program.
 
-In sandbox mode the game speed can be increased to increase the speed of the clock. At default speed, the clock runs at _x_ Hz.
+In sandbox mode the game speed can be increased to increase the speed of the clock. At default speed, the clock runs at 1.5 Hz.
