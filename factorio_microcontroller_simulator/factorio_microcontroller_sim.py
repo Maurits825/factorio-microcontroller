@@ -3,8 +3,7 @@ from pathlib import Path
 
 import click
 
-from factorio_microcontroller import factorio_compiler
-from factorio_microcontroller_simulator.instruction_executor import MicrocontrollerState, InstructionExecutor
+from instruction_executor import InstructionExecutor, MicrocontrollerState
 
 RESOURCE_FOLDER = Path(__file__).parent.parent / "resources"
 
@@ -28,8 +27,8 @@ class FactorioMicrocontrollerSim:
             opcode, literal = self.decoded_instructions[microcontroller_state.program_counter-1]
             is_halt = self.instruction_executor.execute(opcode, literal, microcontroller_state)
 
-            #print("Program count: " + str(microcontroller_state.program_counter))
-            #print("Output register: " + str(microcontroller_state.output_registers))
+            print("Program count: " + str(microcontroller_state.program_counter))
+            print("Output register: " + str(microcontroller_state.output_registers))
 
             if is_halt:
                 return microcontroller_state
@@ -68,17 +67,9 @@ class FactorioMicrocontrollerSim:
 
 @click.command()
 @click.option('--binary', '-b', help='Name of the binary file')
-@click.option('--assembly', '-a', help='Name of the assembly file')
-def main(binary, assembly):
-    if binary:
-        factorio_microcontroller_sim = FactorioMicrocontrollerSim(binary)
-        factorio_microcontroller_sim.simulate()
-    else:
-        compiler = factorio_compiler.FactorioCompiler()
-        binary_file = assembly[:-4] + '_binary.txt'
-        compiler.compile_to_bin(assembly, binary_file)
-        factorio_microcontroller_sim = FactorioMicrocontrollerSim(binary_file)
-        factorio_microcontroller_sim.simulate()
+def main(binary,):
+    factorio_microcontroller_sim = FactorioMicrocontrollerSim(binary)
+    factorio_microcontroller_sim.simulate()
 
 
 if __name__ == '__main__':
