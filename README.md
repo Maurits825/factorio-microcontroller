@@ -14,7 +14,7 @@ The assembly programs have to be written using the [Factorio Assembly language](
 
 Run the `setup.sh` script only once to create the virtual environment and download the dependencies.
 
-To compile the program, double click the `start.sh` script.  
+To compile the program, double click the `start_microcontroller.sh` script.  
 Use `python factorio_microcontroller.py -a (file_name)` to compile your program, with the optional `-c` flag to copy the blueprint to the clipboard.  
 For example: `python factorio_microcontroller.py -a ../programs/counter.txt -c`  
 This also creates a binary file name _file_name_binary_ in the programs folder.
@@ -26,3 +26,6 @@ Import the blueprint into Factorio. Place it on the left side of the ROM. Connec
 Turn the reset combinator on and off to reset the microcontroller. Enable the clock to start the program.
 
 In sandbox mode the game speed can be increased to increase the speed of the clock. At default speed, the clock runs at 1.5 Hz.
+
+## Microcontroller Simulator
+The simulator simulates the microcontroller and can be useful to debug assembly programs. Run the `start_simulator.sh` script to use it.
