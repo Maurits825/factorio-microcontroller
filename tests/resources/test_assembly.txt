@@ -41,3 +41,11 @@ VAR a
 RET
 ROLF a
 END
+
+FN with_input_args a b c
+VAR d
+WOUTF,1 a
+WOUTF,1 b
+WOUTF,1 c
+RET
+END

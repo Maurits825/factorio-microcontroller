@@ -4,17 +4,20 @@ from pathlib import Path
 
 RESOURCE_FOLDER = Path(__file__).parent.parent / "resources"
 
+#TODO create a loggin class and stuff to print line and stuff like that
 
 class FactorioCompiler:
     def __init__(self):
         with open(RESOURCE_FOLDER / "opcodes.json") as opcodes:
             self.opcodes = json.loads(opcodes.read())
 
-    def compile_to_bin(self, file_name, binary_file_name):
+    def compile_to_bin(self, file_name):
         with open(file_name) as f:
             assembly_program_raw = f.read().splitlines()
 
         assembly_program = self.remove_comments_and_blank_lines(assembly_program_raw)
+
+        assembly_program = self.add_var_to_functions_input_args(assembly_program)
 
         functions = self.calculate_function_address(assembly_program)
 
@@ -27,8 +30,11 @@ class FactorioCompiler:
 
         final_binary = self.add_function_binary(binary_with_call, functions, program_size)
 
+        binary_file_name = file_name[:-4] + '.bin'
         with open(binary_file_name, 'w') as f:
             f.write('\n'.join(line for line in final_binary))
+
+        return binary_file_name
 
     def remove_comments_and_blank_lines(self, assembly):
         assembly_stripped = []
@@ -91,9 +97,12 @@ class FactorioCompiler:
             instructions = line.split()
             mnemonic = instructions[0]
 
-            # decode call later
             if mnemonic == 'CALL':
+                if len(instructions) > 2:
+                    self.handle_input_arguments(instructions, current_variable_map, current_variable_address, current_binary)
+
                 current_binary.append(line)
+
             elif mnemonic == 'FN':
                 function_goto_map = dict()
                 current_goto_map = function_goto_map
@@ -104,6 +113,13 @@ class FactorioCompiler:
                 current_variable_address = [1]
 
                 current_binary = function_binary
+
+                # load input args
+                if len(instructions) > 2:
+                    for variable in instructions[2:]:
+                        current_variable_map[variable] = current_variable_address[0]
+                        current_variable_address[0] += 1
+
             elif len(instructions) == 1 and mnemonic not in self.opcodes:
                 if mnemonic != 'END':
                     current_goto_map[mnemonic] = len(binary_with_call) + 1
@@ -141,15 +157,8 @@ class FactorioCompiler:
         return literal
 
     def get_literal_from_operand(self, mnemonic, operand, goto_map, variables, variable_address):
-        literal = None
-        # TODO we can still hard code memory addresses? could check this and give an error
-        if '0b' in operand:
-            literal = operand.replace('0b', '')
-        elif '0x' in operand:
-            literal = '{0:024b}'.format(int(operand, 16))
-        elif '0d' in operand:
-            literal = '{0:024b}'.format(int(operand.replace('0d', '')))
-        else:
+        literal = self.get_literal_value_from_operand(operand)
+        if not literal:
             if mnemonic == 'GOTO':
                 if operand in goto_map:
                     literal = '{0:024b}'.format(goto_map[operand])
@@ -176,13 +185,57 @@ class FactorioCompiler:
             print('Error with literal')
             exit()
 
+    def get_literal_value_from_operand(self, operand):
+        # TODO we can still hard code memory addresses? could check this and give an error
+        literal = None
+
+        if '0b' in operand:
+            literal = operand.replace('0b', '')
+        elif '0x' in operand:
+            literal = '{0:024b}'.format(int(operand, 16))
+        elif '0d' in operand:
+            literal = '{0:024b}'.format(int(operand.replace('0d', '')))
+
+        return literal
+
+    def handle_input_arguments(self, instructions, variable_map, variable_address, current_binary):
+        for index, operand in enumerate(instructions[2:]):
+            # Move value to W
+            if operand in variable_map:
+                opcode = self.get_opcode('MOVFW')
+                literal = '{0:024b}'.format(variable_map[operand])
+            else:
+                opcode = self.get_opcode('MOVLW')
+                literal = self.get_literal_value_from_operand(operand)
+                if not literal:
+                    print("Unknown input argument " + str(operand) + " to function " + str(instructions[1]))
+                    exit()
+
+            current_binary.append(literal + opcode)
+
+            # Move W to the input variable
+            opcode = self.get_opcode('MOVWF')
+            literal = '{0:024b}'.format(variable_address[0] + index)
+            current_binary.append(literal + opcode)
+
+    def add_var_to_functions_input_args(self, assembly):
+        new_assembly = []
+        for line in assembly:
+            new_assembly.append(line)
+            if "FN" in line:
+                instructions = line.split()
+                if len(instructions) > 2:
+                    input_variable_count = len(instructions) - 2
+                    new_assembly.append('VAR 0d' + str(input_variable_count))
+
+        return new_assembly
+
 
 @click.command()
 @click.option('--assembly', '-a', help='Assembly file')
-@click.option('--binary', '-b', help='Name of the output binary file')
-def main(assembly, binary):
+def main(assembly):
     factorio_compiler = FactorioCompiler()
-    factorio_compiler.compile_to_bin(assembly, binary)
+    factorio_compiler.compile_to_bin(assembly)
 
 
 if __name__ == '__main__':

@@ -1,12 +1,10 @@
-# compute the nth Fibonacci number
-MOVLW 0d10
-CALL fibonacci
-
-FN fibonacci
-# store input value n
+# compute the nth Fibonacci number, starting at 1
 VAR n
+MOVLW 0d10
 MOVWF n
+CALL fibonacci n
 
+FN fibonacci n
 # if (n <= 1), n < 2, F < W, W > F
 MOVLW 0d2
 GRTWF,0 n
@@ -23,13 +21,11 @@ MOVWF n_minus_2
 DECRF n_minus_2
 DECRF n_minus_2
 
-MOVFW n_minus_1
-CALL fibonacci
+CALL fibonacci n_minus_1
 VAR ret_1
 MOVWF ret_1
 
-MOVFW n_minus_2
-CALL fibonacci
+CALL fibonacci n_minus_2
 VAR ret_2
 MOVWF ret_2
 

@@ -13,12 +13,12 @@ class FactorioCompilerTest(unittest.TestCase):
 
     def test_compile_to_bin(self):
         assembly_file = TEST_RESOURCE_FOLDER / "test_assembly.txt"
-        actual_assembly_file = TEST_RESOURCE_FOLDER / "test_bin_actual.txt"
-        self.fc.compile_to_bin(assembly_file, actual_assembly_file)
-        self.assertTrue(filecmp.cmp(TEST_RESOURCE_FOLDER / "test_bin_expected.txt",
-                                    TEST_RESOURCE_FOLDER / "test_bin_actual.txt"))
+        binary_file = self.fc.compile_to_bin(str(assembly_file))
+        expected_binary_file = TEST_RESOURCE_FOLDER / "test_bin_expected.bin"
 
-        os.remove(actual_assembly_file)
+        self.assertTrue(filecmp.cmp(expected_binary_file, binary_file))
+
+        os.remove(binary_file)
 
 
 if __name__ == '__main__':

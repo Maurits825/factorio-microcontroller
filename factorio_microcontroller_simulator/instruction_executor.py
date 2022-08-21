@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 import re
 
+MEMORY_SIZE = 500
+
 
 @dataclass()
 class MicrocontrollerState:
     w_register: int
-    f_memory: dict[int]
+    f_memory: []
     program_counter: int
     function_call_stack: []
     variable_scope_stack: []
@@ -14,7 +16,7 @@ class MicrocontrollerState:
 
     def __init__(self):
         self.w_register = 0
-        self.f_memory = dict()
+        self.f_memory = [0 for _ in range(MEMORY_SIZE)]
         self.program_counter = 1
         self.function_call_stack = []
         self.variable_scope_stack = [0]
@@ -124,6 +126,8 @@ class InstructionExecutor:
                 state.w_register = literal
             elif opcode == 'RETFW':
                 state.w_register = self.read_f_memory(literal, state)
+            elif opcode == 'RET':
+                pass
             else:
                 raise Exception("Unknown return operation.")
 
@@ -211,11 +215,7 @@ class InstructionExecutor:
 
     def load_from_location(self, location, literal, state):
         if location == 'f':
-            if literal in state.f_memory:
-                value = self.read_f_memory(literal, state)
-            else:
-                value = 0
-                print("Warning: uninitialized memory read")
+            value = self.read_f_memory(literal, state)
         else:
             value = literal
 
