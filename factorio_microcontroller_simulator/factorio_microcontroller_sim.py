@@ -4,7 +4,7 @@ from pathlib import Path
 import click
 
 from factorio_microcontroller import factorio_compiler
-from factorio_microcontroller_simulator.instruction_executor import MicrocontrollerState, InstructionExecutor
+from instruction_executor import InstructionExecutor, MicrocontrollerState
 
 RESOURCE_FOLDER = Path(__file__).parent.parent / "resources"
 CPU_BASE_SPEED = 1.5
