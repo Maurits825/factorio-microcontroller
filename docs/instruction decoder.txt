@@ -12,8 +12,8 @@ every cycle write = W
 second cycle write = Z
 
 Memory:
-F write = green, clock write = iron ore
-W write = blue, clock write = uranium ore
+F write = green, clock write = uranium ore
+W write = blue, clock write = iron ore
 F read  = yellow
 W read  = pink
 
@@ -31,10 +31,12 @@ W Data out = Y
 ALU to W = K
 F to W   = cyan
 L to W   = copper plate
+in to W  = rocket
 
 ALU to F = L
 W to F   = white
 L to F   = M
+in to F  = explosive rocket
 
 L to AwF = grey
 L to ArF = black
@@ -82,11 +84,15 @@ L to ALU2 = prod2
 
 I/O
 out1/out2 value = 3/4
+in1/in2 value = 5/6
+
 L to OUT1 = armor1
 F to OUT1 = armor2
+W to OUT1 = grenade
 
 L to OUT2 = armor3
 F to OUT2 = armor4
+W to OUT2 = cluster grenade
 
 OUT1 w = battery1, clock write = energy shield 1
 OUT2 w = battery2, clock write = energy shield 2
