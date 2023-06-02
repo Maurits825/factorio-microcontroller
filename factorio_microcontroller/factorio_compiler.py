@@ -121,6 +121,7 @@ class FactorioCompiler:
                         current_variable_address[0] += 1
 
             elif len(instructions) == 1 and mnemonic not in self.opcodes:
+                # TODO if we have a GOTO before the label, wont work...
                 if mnemonic != 'END':
                     current_goto_map[mnemonic] = len(binary_with_call) + 1
             else:

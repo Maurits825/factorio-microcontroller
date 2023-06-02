@@ -7,12 +7,13 @@ MEMORY_SIZE = 500
 @dataclass()
 class MicrocontrollerState:
     w_register: int
-    f_memory: []
+    f_memory: list
     program_counter: int
-    function_call_stack: []
-    variable_scope_stack: []
+    function_call_stack: list
+    variable_scope_stack: list
     variable_offset: int
-    output_registers: []
+    output_registers: list
+    input_values: list
 
     def __init__(self):
         self.w_register = 0
@@ -22,6 +23,7 @@ class MicrocontrollerState:
         self.variable_scope_stack = [0]
         self.variable_offset = 0
         self.output_registers = [0, 0]
+        self.input_values = [0, 0]
 
 
 ALU_OPERATIONS = [
@@ -60,6 +62,10 @@ class InstructionExecutor:
 
         elif 'WOUT' in opcode:
             self.execute_output_operation(opcode, literal, state)
+
+        elif 'RIN' in opcode:
+            self.execute_input_operation(opcode, literal, state)
+
         else:
             raise Exception("Unknown instruction.")
 
@@ -78,9 +84,21 @@ class InstructionExecutor:
 
         if load == 'L':
             state.output_registers[output_index] = literal
+        elif load == 'W':
+            state.output_registers[output_index] = state.w_register
         else:
             state.output_registers[output_index] = self.read_f_memory(literal, state)
 
+        state.program_counter += 1
+
+    def execute_input_operation(self, opcode: str, literal: int, state: MicrocontrollerState):
+        opcode_split = opcode.split(',')
+        input_index = int(opcode_split[1]) - 1
+        store = opcode_split[0][-1]
+        address = literal
+        value = state.input_values[input_index]
+
+        self.store_at_location(store, address, value, state)
         state.program_counter += 1
 
     def execute_branching_operation(self, opcode: str, literal: int, state: MicrocontrollerState):
@@ -141,19 +159,19 @@ class InstructionExecutor:
             return
 
         elif opcode == 'MOVLW':
-            store = 'w'
+            store = 'W'
             address = 0
             value = literal
         elif opcode == 'MOVWF':
-            store = 'f'
+            store = 'F'
             address = literal
             value = state.w_register
         elif opcode == 'MOVFW':
-            store = 'w'
+            store = 'W'
             address = literal
             value = self.read_f_memory(address, state)
         elif opcode == 'MOVLF':
-            store = 'f'
+            store = 'F'
             address = state.w_register
             value = literal
         else:
@@ -163,7 +181,7 @@ class InstructionExecutor:
         state.program_counter += 1
 
     def execute_alu_operation(self, opcode: str, literal: int, state: MicrocontrollerState):
-        store, load = self.get_load_and_store_location(opcode)
+        store, load = self.get_alu_load_and_store_location(opcode)
 
         input_a = state.w_register
         input_b = self.load_from_location(load, literal, state)
@@ -180,16 +198,16 @@ class InstructionExecutor:
             result = int(input_a % input_b)
         elif 'INCR' in opcode:
             result = self.read_f_memory(literal, state) + 1
-            store = 'f'
+            store = 'F'
         elif 'DECR' in opcode:
             result = self.read_f_memory(literal, state) - 1
-            store = 'f'
+            store = 'F'
         elif 'ROL' in opcode:
             result = self.read_f_memory(literal, state) << 1
-            store = 'f'
+            store = 'F'
         elif 'ROR' in opcode:
             result = self.read_f_memory(literal, state) >> 1
-            store = 'f'
+            store = 'F'
         elif 'NAND' in opcode:
             result = ~ (input_a & input_b)
         elif 'NOR' in opcode:
@@ -202,30 +220,34 @@ class InstructionExecutor:
         self.store_at_location(store, literal, result, state)
         state.program_counter += 1
 
-    def get_load_and_store_location(self, opcode):
+    def get_alu_load_and_store_location(self, opcode):
         if ',' in opcode:
             opcode_split = opcode.split(',')
             store = opcode_split[-1]
-            load = 'f'
+            load = 'F'
         else:
-            store = 'w'
-            load = 'l'
+            store = 'W'
+            load = 'L'
 
         return store, load
 
     def load_from_location(self, location, literal, state):
-        if location == 'f':
+        if location.upper() == 'F':
             value = self.read_f_memory(literal, state)
-        else:
+        elif location.upper() == 'L':
             value = literal
+        else:
+            raise Exception("Invalid load location: " + location)
 
         return value
 
     def store_at_location(self, location, address, value, state):
-        if location == 'f':
+        if location.upper() == 'F':
             self.write_f_memory(address, value, state)
-        else:
+        elif location.upper() == 'W':
             state.w_register = value
+        else:
+            raise Exception("Invalid store location: " + location)
 
     def read_f_memory(self, address, state: MicrocontrollerState):
         return state.f_memory[address + state.variable_scope_stack[-1]]
