@@ -47,5 +47,7 @@ VAR d
 WOUTF,1 a
 WOUTF,1 b
 WOUTF,1 c
+RINF,1 a
+RINF,2 a
 RET
 END
