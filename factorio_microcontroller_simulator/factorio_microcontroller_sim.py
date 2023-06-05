@@ -8,7 +8,8 @@ from factorio_microcontroller_simulator.input_sim import InputSim
 from instruction_executor import InstructionExecutor, MicrocontrollerState
 
 RESOURCE_FOLDER = Path(__file__).parent.parent / "resources"
-CPU_BASE_SPEED = 1.5
+CPU_BASE_SPEED = 0.375
+CYCLE_TIMEOUT = 5_000
 
 
 class FactorioMicrocontrollerSim:
@@ -30,16 +31,9 @@ class FactorioMicrocontrollerSim:
             opcode, literal = self.decoded_instructions[microcontroller_state.program_counter - 1]
 
             # TODO maybe a json config with the input mock type and data (linear, random, exponential)
-            microcontroller_state.input_values[0] = InputSim.get_linear_input(cycle_count, 1, 0)
+            microcontroller_state.input_values[0] = InputSim.get_linear_input(cycle_count, 2, 0)
 
             is_halt = self.instruction_executor.execute(opcode, literal, microcontroller_state)
-
-            if is_halt:
-                if verbose:
-                    print("\nHalted after " + str(cycle_count) + " cycles.")
-                    print("Would take " + str(round(cycle_count / (CPU_BASE_SPEED * 64))) + " seconds to complete.")
-                return microcontroller_state
-
             cycle_count += 1
 
             if verbose:
@@ -53,6 +47,12 @@ class FactorioMicrocontrollerSim:
                       str(microcontroller_state.f_memory[
                           microcontroller_state.variable_scope_stack[-1] + 1:
                           microcontroller_state.variable_scope_stack[-1] + 10]))
+
+            if is_halt or cycle_count >= CYCLE_TIMEOUT:
+                if verbose:
+                    print("\nHalted after " + str(cycle_count) + " cycles.")
+                    print("Would take " + str(round(cycle_count / (CPU_BASE_SPEED * 64))) + " seconds to complete.")
+                return microcontroller_state
 
     def decode_all_instructions(self):
         decoded_instructions = []

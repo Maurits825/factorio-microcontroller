@@ -31,12 +31,14 @@ W Data out = Y
 ALU to W = K
 F to W   = cyan
 L to W   = copper plate
-in to W  = rocket
+in1 to W  = rocket
+in2 to W  = magazine
 
-ALU to F = L
+ALU to F = Ls
 W to F   = white
 L to F   = M
-in to F  = explosive rocket
+in1 to F  = explosive rocket
+in2 to F  = piercing magazine
 
 L to AwF = grey
 L to ArF = black
