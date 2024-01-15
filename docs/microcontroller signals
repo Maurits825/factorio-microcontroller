@@ -34,7 +34,7 @@ L to W   = copper plate
 in1 to W  = rocket
 in2 to W  = magazine
 
-ALU to F = Ls
+ALU to F = L
 W to F   = white
 L to F   = M
 in1 to F  = explosive rocket
@@ -76,6 +76,7 @@ MUL  = nuclear reactor
 DIV  = heat pipe
 INCR = heat exchange
 DECR = steam turbine
+MOD  = burner mining drill
 
 W to ALU1 = speed1
 F to ALU1 = eff1
