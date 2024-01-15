@@ -77,6 +77,10 @@ DIV  = heat pipe
 INCR = heat exchange
 DECR = steam turbine
 MOD  = burner mining drill
+ROR  = electric mining drill
+ROL  = offshore pump
+AND  = pumpjack
+OR   = stone furnace
 
 W to ALU1 = speed1
 F to ALU1 = eff1
