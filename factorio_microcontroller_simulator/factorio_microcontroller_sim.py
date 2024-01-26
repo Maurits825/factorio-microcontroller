@@ -1,9 +1,11 @@
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import click
 
 from factorio_microcontroller import factorio_compiler
+from factorio_microcontroller_simulator.igpu_sim import IGPUSim
 from factorio_microcontroller_simulator.input_sim import InputSim
 from instruction_executor import InstructionExecutor, MicrocontrollerState
 
@@ -19,12 +21,19 @@ class FactorioMicrocontrollerSim:
         self.decoded_instructions = self.decode_all_instructions()
 
         self.instruction_executor = InstructionExecutor()
+        self.igpu_sim = IGPUSim()
 
     def load_binary(self, file_name):
         with open(file_name) as f:
             return f.read().splitlines()
 
-    def simulate(self, verbose):
+    def run(self, verbose, enable_igpu_sim):
+        self.simulate(verbose, enable_igpu_sim)
+
+        if enable_igpu_sim:
+            self.igpu_sim.run()
+
+    def simulate(self, verbose, enable_igpu_sim):
         microcontroller_state = MicrocontrollerState()
         cycle_count = 0
         while True:
@@ -34,19 +43,13 @@ class FactorioMicrocontrollerSim:
             microcontroller_state.input_values[0] = InputSim.get_linear_input(cycle_count, 2, 0)
 
             is_halt = self.instruction_executor.execute(opcode, literal, microcontroller_state)
+            if enable_igpu_sim:
+                self.igpu_sim.add_state(deepcopy(microcontroller_state.igpu_state))
+
             cycle_count += 1
 
             if verbose:
-                print("\nCycle: " + str(cycle_count))
-                print("Program count: " + str(microcontroller_state.program_counter-1))
-                print("Opcode: " + str(opcode) + ", literal: " + str(literal))
-                print("Output & W registers: " + str(microcontroller_state.output_registers) +
-                      ", " + str(microcontroller_state.w_register))
-                # TODO cant accurately display current scope without tracking it, will contain unallocated memory
-                print("Current memory snapshot: " +
-                      str(microcontroller_state.f_memory[
-                          microcontroller_state.variable_scope_stack[-1] + 1:
-                          microcontroller_state.variable_scope_stack[-1] + 10]))
+                self.print_verbose(opcode, literal, cycle_count, microcontroller_state)
 
             if is_halt or cycle_count >= CYCLE_TIMEOUT:
                 if verbose:
@@ -85,20 +88,35 @@ class FactorioMicrocontrollerSim:
 
         return {v: k for k, v in opcodes_expanded.items()}
 
+    @staticmethod
+    def print_verbose(opcode, literal, cycle_count, microcontroller_state):
+        print("\nCycle: " + str(cycle_count))
+        print("Program count: " + str(microcontroller_state.program_counter - 1))
+        print("Opcode: " + str(opcode) + ", literal: " + str(literal))
+        print("Output & W registers: " + str(microcontroller_state.output_registers) +
+              ", " + str(microcontroller_state.w_register))
+        # TODO cant accurately display current scope without tracking it, will contain unallocated memory
+        print("Current memory snapshot: " +
+              str(microcontroller_state.f_memory[
+                  microcontroller_state.variable_scope_stack[-1] + 1:
+                  microcontroller_state.variable_scope_stack[-1] + 10]))
+        print("Screen buffer: " + str(microcontroller_state.igpu_state.screen_buffer))
+
 
 @click.command()
 @click.option('--binary', '-b', help='Name of the binary file')
 @click.option('--assembly', '-a', help='Name of the assembly file')
 @click.option('--verbose', '-v', is_flag=True, show_default=True, default=False, help="Print out state information")
-def main(binary, assembly, verbose):
+@click.option('--enable-igpu-sim', '-g', is_flag=True, show_default=True, default=False, help="Enable igpu sim")
+def main(binary, assembly, verbose, enable_igpu_sim):
     if binary:
         factorio_microcontroller_sim = FactorioMicrocontrollerSim(binary)
-        factorio_microcontroller_sim.simulate(verbose)
+        factorio_microcontroller_sim.run(verbose, enable_igpu_sim)
     else:
         compiler = factorio_compiler.FactorioCompiler()
         binary_file = compiler.compile_to_bin(assembly)
         factorio_microcontroller_sim = FactorioMicrocontrollerSim(binary_file)
-        factorio_microcontroller_sim.simulate(verbose)
+        factorio_microcontroller_sim.run(verbose, enable_igpu_sim)
 
 
 if __name__ == '__main__':

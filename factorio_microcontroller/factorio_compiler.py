@@ -4,7 +4,8 @@ from pathlib import Path
 
 RESOURCE_FOLDER = Path(__file__).parent.parent / "resources"
 
-#TODO create a loggin class and stuff to print line and stuff like that
+
+# TODO create a loggin class and stuff to print line and stuff like that
 
 class FactorioCompiler:
     def __init__(self):
@@ -99,7 +100,8 @@ class FactorioCompiler:
 
             if mnemonic == 'CALL':
                 if len(instructions) > 2:
-                    self.handle_input_arguments(instructions, current_variable_map, current_variable_address, current_binary)
+                    self.handle_input_arguments(instructions, current_variable_map, current_variable_address,
+                                                current_binary)
 
                 current_binary.append(line)
 
@@ -150,7 +152,7 @@ class FactorioCompiler:
         return opcode
 
     def get_literal(self, mnemonic, instructions, goto_map, variables, variable_address):
-        if mnemonic == 'RET' or mnemonic == 'PULSE':
+        if mnemonic == 'RET' or mnemonic == 'PULSE':  # TODO maybe a more generic test, if no operand, also make goto labels need like a "label RESET"
             literal = '{0:024b}'.format(0)
         else:
             literal = self.get_literal_from_operand(mnemonic, instructions[1], goto_map, variables, variable_address)
@@ -191,12 +193,12 @@ class FactorioCompiler:
         literal = None
 
         if '0b' in operand:
-            literal = operand.replace('0b', '')
+            literal = (('0' * 24) + operand.replace('0b', ''))[-24:]
         elif '0x' in operand:
             literal = '{0:024b}'.format(int(operand, 16))
         elif '0d' in operand:
             literal = '{0:024b}'.format(int(operand.replace('0d', '')))
-
+        # TODO maybe be able to define #CONSTANTS and use with # as literal
         return literal
 
     def handle_input_arguments(self, instructions, variable_map, variable_address, current_binary):

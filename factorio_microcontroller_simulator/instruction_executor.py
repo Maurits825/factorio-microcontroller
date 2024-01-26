@@ -1,30 +1,7 @@
-from dataclasses import dataclass
 import re
 
-MEMORY_SIZE = 500
-
-
-@dataclass()
-class MicrocontrollerState:
-    w_register: int
-    f_memory: list
-    program_counter: int
-    function_call_stack: list
-    variable_scope_stack: list
-    variable_offset: int
-    output_registers: list
-    input_values: list
-
-    def __init__(self):
-        self.w_register = 0
-        self.f_memory = [0 for _ in range(MEMORY_SIZE)]
-        self.program_counter = 1
-        self.function_call_stack = []
-        self.variable_scope_stack = [0]
-        self.variable_offset = 0
-        self.output_registers = [0, 0]
-        self.input_values = [0, 0]
-
+from factorio_microcontroller_simulator.igpu_instruction_executor import IGPUInstructionExecutor
+from factorio_microcontroller_simulator.microcontroller_state import MicrocontrollerState
 
 ALU_OPERATIONS = [
     "ADD", "SUB", "MUL", "DIV",
@@ -40,6 +17,12 @@ BRANCHING_OPERATIONS = [
 
 OTHER_OPERATIONS = [
     "NOP", "PULSE",
+]
+
+IGPU_OPERATIONS = [
+    "IGRENDER", "IGDRAWPL", "IGDRAWPF", "IGCLEAR", "IGDRAWVL",
+    "IGDRAWVF", "IGDRAWHL", "IGDRAWHF", "IGDRAWRL", "IGDRAWRF",
+    "IGSETFL", "IGSETFF", "IGSAVE", "IGLOAD"
 ]
 
 
@@ -66,8 +49,11 @@ class InstructionExecutor:
         elif 'RIN' in opcode:
             self.execute_input_operation(opcode, literal, state)
 
+        elif any(igpu_op in opcode for igpu_op in IGPU_OPERATIONS):
+            IGPUInstructionExecutor.execute_operation(opcode, literal, state)
+
         else:
-            raise Exception("Unknown instruction.")
+            raise Exception("Unknown instruction: " + opcode)
 
     def execute_other_operation(self, opcode: str, literal: int, state: MicrocontrollerState):
         if opcode == 'NOP':
@@ -87,7 +73,7 @@ class InstructionExecutor:
         elif load == 'W':
             state.output_registers[output_index] = state.w_register
         else:
-            state.output_registers[output_index] = self.read_f_memory(literal, state)
+            state.output_registers[output_index] = state.read_f_memory(literal)
 
         state.program_counter += 1
 
@@ -107,7 +93,7 @@ class InstructionExecutor:
 
             opcode_split = re.split(r'(\d+)', opcode)
             if opcode_split[0][-1] == 'F':
-                input_b = self.read_f_memory(literal, state)
+                input_b = state.read_f_memory(literal)
             else:
                 input_b = literal
 
@@ -143,7 +129,7 @@ class InstructionExecutor:
             if opcode == 'RETLW':
                 state.w_register = literal
             elif opcode == 'RETFW':
-                state.w_register = self.read_f_memory(literal, state)
+                state.w_register = state.read_f_memory(literal)
             elif opcode == 'RET':
                 pass
             else:
@@ -169,7 +155,7 @@ class InstructionExecutor:
         elif opcode == 'MOVFW':
             store = 'W'
             address = literal
-            value = self.read_f_memory(address, state)
+            value = state.read_f_memory(address)
         elif opcode == 'MOVLF':
             store = 'F'
             address = state.w_register
@@ -197,16 +183,16 @@ class InstructionExecutor:
         elif 'MOD' in opcode:
             result = int(input_a % input_b)
         elif 'INCR' in opcode:
-            result = self.read_f_memory(literal, state) + 1
+            result = state.read_f_memory(literal) + 1
             store = 'F'
         elif 'DECR' in opcode:
-            result = self.read_f_memory(literal, state) - 1
+            result = state.read_f_memory(literal) - 1
             store = 'F'
         elif 'ROL' in opcode:
-            result = self.read_f_memory(literal, state) << 1
+            result = state.read_f_memory(literal) << 1
             store = 'F'
         elif 'ROR' in opcode:
-            result = self.read_f_memory(literal, state) >> 1
+            result = state.read_f_memory(literal) >> 1
             store = 'F'
         elif 'NAND' in opcode:
             result = ~ (input_a & input_b)
@@ -233,7 +219,7 @@ class InstructionExecutor:
 
     def load_from_location(self, location, literal, state):
         if location.upper() == 'F':
-            value = self.read_f_memory(literal, state)
+            value = state.read_f_memory(literal)
         elif location.upper() == 'L':
             value = literal
         else:
@@ -243,14 +229,8 @@ class InstructionExecutor:
 
     def store_at_location(self, location, address, value, state):
         if location.upper() == 'F':
-            self.write_f_memory(address, value, state)
+            state.write_f_memory(address, value)
         elif location.upper() == 'W':
             state.w_register = value
         else:
             raise Exception("Invalid store location: " + location)
-
-    def read_f_memory(self, address, state: MicrocontrollerState):
-        return state.f_memory[address + state.variable_scope_stack[-1]]
-
-    def write_f_memory(self, address, value, state: MicrocontrollerState):
-        state.f_memory[address + state.variable_scope_stack[-1]] = value
