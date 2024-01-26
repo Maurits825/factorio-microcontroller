@@ -19,6 +19,7 @@ class IGPUInstructionExecutor:
         input_args = IGPUInstructionExecutor.get_input_args(
             state.read_f_memory(literal) if opcode[-1] == 'F' else literal
         )
+
         if 'IGRENDER' in opcode:
             state.igpu_state.screen_buffer = [
                 state.igpu_state.buffer1[i] | state.igpu_state.buffer2[i] for i in range(SCREEN_SIZE)

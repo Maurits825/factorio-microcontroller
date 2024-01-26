@@ -7,7 +7,7 @@ ALU_OPERATIONS = [
     "ADD", "SUB", "MUL", "DIV",
     "MOD", "INCR", "DECR",
     "ROL", "ROR",
-    "NAND", "NOR", "XOR",
+    "AND", "OR",
 ]
 
 BRANCHING_OPERATIONS = [
@@ -189,19 +189,21 @@ class InstructionExecutor:
             result = state.read_f_memory(literal) - 1
             store = 'F'
         elif 'ROL' in opcode:
-            result = state.read_f_memory(literal) << 1
-            store = 'F'
+            if load == 'F':
+                result = input_b << 1
+            else:
+                result = input_a << input_b
         elif 'ROR' in opcode:
-            result = state.read_f_memory(literal) >> 1
-            store = 'F'
-        elif 'NAND' in opcode:
-            result = ~ (input_a & input_b)
-        elif 'NOR' in opcode:
-            result = ~ (input_a | input_b)
-        elif 'XOR' in opcode:
-            result = input_a ^ input_b
+            if load == 'F':
+                result = input_b >> 1
+            else:
+                result = input_a >> input_b
+        elif 'AND' in opcode:
+            result = input_a & input_b
+        elif 'OR' in opcode:
+            result = input_a | input_b
         else:
-            raise Exception("Unknown alu operation.")
+            raise Exception("Unknown alu operation: " + opcode)
 
         self.store_at_location(store, literal, result, state)
         state.program_counter += 1
@@ -210,7 +212,7 @@ class InstructionExecutor:
         if ',' in opcode:
             opcode_split = opcode.split(',')
             store = opcode_split[-1]
-            load = 'F'
+            load = opcode_split[-2][-1]
         else:
             store = 'W'
             load = 'L'

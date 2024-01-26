@@ -47,11 +47,13 @@ class FactorioMicrocontrollerSim:
                 self.igpu_sim.add_state(deepcopy(microcontroller_state.igpu_state))
 
             cycle_count += 1
+            if cycle_count >= CYCLE_TIMEOUT:
+                raise TimeoutError("Program did not halt after " + str(CYCLE_TIMEOUT) + " cycles.")
 
             if verbose:
                 self.print_verbose(opcode, literal, cycle_count, microcontroller_state)
 
-            if is_halt or cycle_count >= CYCLE_TIMEOUT:
+            if is_halt:
                 if verbose:
                     print("\nHalted after " + str(cycle_count) + " cycles.")
                     print("Would take " + str(round(cycle_count / (CPU_BASE_SPEED * 64))) + " seconds to complete.")

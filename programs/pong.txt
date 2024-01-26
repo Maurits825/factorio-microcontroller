@@ -1,10 +1,29 @@
-IGDRAWPL 0b000100000000
-IGRENDER 0d0
+VAR pos_x
+VAR pos_y
+VAR pos_x_y
+VAR count
+
+loop
+MOVLW 0d15
+LESSWF,3 pos_y
+MOVLW 0d0
+MOVWF pos_y
+MOVWF pos_x
+INCRF count
+
+INCRF pos_y
+INCRF pos_x
+
+# pack pixel args
+MOVFW pos_x
+ROLWL,w 0d6
+ORWF,w pos_y
+MOVWF pos_x_y
 
 IGCLEAR 0d0
-IGDRAWPL 0b000100000001
+IGDRAWPF pos_x_y
 IGRENDER 0d0
 
-IGCLEAR 0d0
-IGDRAWPL 0b000100000010
-IGRENDER 0d0
+MOVLW 0d2
+GRTWF,0 count
+GOTO loop
