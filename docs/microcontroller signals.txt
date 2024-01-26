@@ -107,10 +107,20 @@ OUT2 w = battery2, clock write = energy shield 2
 PULSE = belt immunity, clock write = exoskeleton
 
 IGPU
-render = iron gear wheel
+render = sulfuric acid barrel, clock write = iron gear wheel
+buffer read (clear) = crude oil barrel
 clear = engine unit
-buffer1 w = copper cable, clock write = iron stick
-buffer1 data = processing unit
+buffer clock write = iron stick
+flag = nuclear fuel, clock write = heavy oil barrel
+obj buffer = light oil barrel, clock write = lubricant barrel
+igpu data = processing unit
 W to bf1 = empty barrel
 F to bf1 = electronic circuit
 L to bf1 = advanced circuit
+
+DRAWP  = electric engine unit
+DRAWV = flying robot frame
+DRAWH = rocket control unit
+DRAWR = low density structure
+DRAWL = rocket fuel
+LOAD  = petroleum gas barrel
