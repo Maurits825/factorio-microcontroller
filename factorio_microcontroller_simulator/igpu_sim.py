@@ -18,7 +18,7 @@ class IGPUSim:
         self.igpu_states.append(state)
 
     def run(self):
-        with imageio.get_writer("screen.gif", mode='I', duration=50) as writer:
+        with imageio.get_writer("screen.gif", mode='I', duration=5) as writer:
             for i, state in enumerate(self.igpu_states):
                 image = self.get_image_from_buffer(state.screen_buffer)
                 #image.save(IMAGES_FOLDER / ("screen_" + str(i) + ".png"))

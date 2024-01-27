@@ -39,7 +39,7 @@ CALL foo
 FN foo
 VAR a
 RET
-ROLF a
+ROLF,f a
 END
 
 FN with_input_args a b c

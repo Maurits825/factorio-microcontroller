@@ -11,7 +11,7 @@ from instruction_executor import InstructionExecutor, MicrocontrollerState
 
 RESOURCE_FOLDER = Path(__file__).parent.parent / "resources"
 CPU_BASE_SPEED = 0.375
-CYCLE_TIMEOUT = 5_000
+CYCLE_TIMEOUT = 50_000
 
 
 class FactorioMicrocontrollerSim:
@@ -54,9 +54,8 @@ class FactorioMicrocontrollerSim:
                 self.print_verbose(opcode, literal, cycle_count, microcontroller_state)
 
             if is_halt:
-                if verbose:
-                    print("\nHalted after " + str(cycle_count) + " cycles.")
-                    print("Would take " + str(round(cycle_count / (CPU_BASE_SPEED * 64))) + " seconds to complete.")
+                print("\nHalted after " + str(cycle_count) + " cycles.")
+                print("Would take " + str(round(cycle_count / (CPU_BASE_SPEED * 64))) + " seconds to complete.")
                 return microcontroller_state
 
     def decode_all_instructions(self):

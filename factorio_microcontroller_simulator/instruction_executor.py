@@ -29,7 +29,11 @@ IGPU_OPERATIONS = [
 class InstructionExecutor:
     def execute(self, opcode: str, literal: int, state: MicrocontrollerState):
         if opcode == 'HALT':
-            return True
+            if literal == 1:
+                state.program_counter += 1
+                return False
+            else:
+                return True
 
         if any(alu_op in opcode for alu_op in ALU_OPERATIONS):
             self.execute_alu_operation(opcode, literal, state)
@@ -54,6 +58,8 @@ class InstructionExecutor:
 
         else:
             raise Exception("Unknown instruction: " + opcode)
+
+        return False
 
     def execute_other_operation(self, opcode: str, literal: int, state: MicrocontrollerState):
         if opcode == 'NOP':

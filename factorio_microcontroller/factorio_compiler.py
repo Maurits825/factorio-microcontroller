@@ -154,6 +154,8 @@ class FactorioCompiler:
     def get_literal(self, mnemonic, instructions, goto_map, variables, variable_address):
         if mnemonic == 'RET' or mnemonic == 'PULSE':  # TODO maybe a more generic test, if no operand, also make goto labels need like a "label RESET"
             literal = '{0:024b}'.format(0)
+        elif 'EVPY' in instructions[1]: # TODO work-around
+            literal = self.get_eval_py_literal(instructions)
         else:
             literal = self.get_literal_from_operand(mnemonic, instructions[1], goto_map, variables, variable_address)
 
@@ -200,6 +202,11 @@ class FactorioCompiler:
             literal = '{0:024b}'.format(int(operand.replace('0d', '')))
         # TODO maybe be able to define #CONSTANTS and use with # as literal
         return literal
+
+    def get_eval_py_literal(self, instructions):
+        eval_py = ''.join(instructions[1:]).replace('EVPY', '')
+        literal = eval(eval_py, {})
+        return '{0:024b}'.format(literal)
 
     def handle_input_arguments(self, instructions, variable_map, variable_address, current_binary):
         for index, operand in enumerate(instructions[2:]):

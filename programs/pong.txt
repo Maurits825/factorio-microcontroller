@@ -1,29 +1,77 @@
 VAR pos_x
 VAR pos_y
-VAR pos_x_y
-VAR count
-
-loop
-MOVLW 0d15
-LESSWF,3 pos_y
-MOVLW 0d0
-MOVWF pos_y
+MOVLW 0d18
 MOVWF pos_x
-INCRF count
+MOVLW 0d16
+MOVWF pos_y
+VAR pos_x_y
 
-INCRF pos_y
-INCRF pos_x
+# set velocity to right and top
+VAR v_x
+VAR v_y
+MOVLW 0d2
+MOVWF v_x
+MOVWF v_y
 
+# draw background in buffer 1
+IGSETFL 0d1
+IGDRAWRL EVPY((5 << 18) | (31 << 12) | (0 << 6) | (0))
+IGDRAWRL EVPY((36 << 18) | (31 << 12) | ((36-5) << 6) | (0))
+IGSETFL 0d0
+
+VAR loop_count
+
+# main loop
+loop
 # pack pixel args
 MOVFW pos_x
 ROLWL,w 0d6
 ORWF,w pos_y
 MOVWF pos_x_y
 
+# render ball
 IGCLEAR 0d0
 IGDRAWPF pos_x_y
 IGRENDER 0d0
 
+# check if pos x == 5 and set v_x to the right -> 2
+MOVFW pos_x
+EQWL,1 0d5
 MOVLW 0d2
-GRTWF,0 count
+MOVWF v_x
+
+# check if pos x == 36-5 and set v_x to the left -> 1
+EQWL,1 0d31
+MOVLW 0d1
+MOVWF v_x
+
+# check if pos y == 0 and set v_y to the top -> 2
+MOVFW pos_y
+EQWL,1 0d0
+MOVLW 0d2
+MOVWF v_y
+
+# check if pos y == 31 and set v_y to the bottom -> 1
+EQWL,1 0d31
+MOVLW 0d1
+MOVWF v_y
+
+# double DECRF hack for x and y because its an if not if-else
+# check v_x and update pos_x
+MOVFW v_x
+EQWL,1 0d1
+DECRF pos_x
+DECRF pos_x
+INCRF pos_x
+
+# check v_y and update pos_y
+MOVFW v_y
+EQWL,1 0d1
+DECRF pos_y
+DECRF pos_y
+INCRF pos_y
+
+INCRF loop_count
+MOVLW 0d500
+GRTWF,0 loop_count
 GOTO loop

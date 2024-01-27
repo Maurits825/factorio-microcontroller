@@ -16,9 +16,8 @@ class IGPUInstructionExecutor:
     @staticmethod
     def execute_operation(opcode: str, literal: int, state: MicrocontrollerState):
         active_buffer = state.igpu_state.buffer1 if state.igpu_state.status_flag % 2 == 0 else state.igpu_state.buffer2
-        input_args = IGPUInstructionExecutor.get_input_args(
-            state.read_f_memory(literal) if opcode[-1] == 'F' else literal
-        )
+        input_value = state.read_f_memory(literal) if opcode[-1] == 'F' else literal
+        input_args = IGPUInstructionExecutor.get_input_args(input_value)
 
         if 'IGRENDER' in opcode:
             state.igpu_state.screen_buffer = [
@@ -27,8 +26,15 @@ class IGPUInstructionExecutor:
         elif 'IGCLEAR' in opcode:
             for i in range(SCREEN_SIZE):
                 active_buffer[i] = 0
-        elif 'IGDRAWPL' in opcode or 'IGDRAWPF' in opcode:
-            active_buffer[input_args.x] = 1 << input_args.y
+        elif 'IGSETF' in opcode:
+            state.igpu_state.status_flag = input_value  # TODO later have to fix if multiple flags
+        elif 'IGDRAWP' in opcode:
+            active_buffer[input_args.x] = active_buffer[input_args.x] | (1 << input_args.y)
+        elif 'IGDRAWR' in opcode:
+            for x in range(input_args.x, input_args.a):
+                active_buffer[x] = active_buffer[x] | ((1 << (input_args.b + 1)) - (1 << input_args.y))
+        else:
+            raise Exception("Unknown igpu operation: " + opcode)
 
         state.program_counter += 1
 
