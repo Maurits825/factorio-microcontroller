@@ -18,11 +18,19 @@ class IGPUSim:
         self.igpu_states.append(state)
 
     def run(self):
+        total_states = len(self.igpu_states)
+        print("\nCreating gif ...")
+        size = 2
+
         with imageio.get_writer("screen.gif", mode='I', duration=5) as writer:
             for i, state in enumerate(self.igpu_states):
+                if i % 1000 == 0:
+                    print("Processed: " + str(i) + "/" + str(total_states))
                 image = self.get_image_from_buffer(state.screen_buffer)
                 #image.save(IMAGES_FOLDER / ("screen_" + str(i) + ".png"))
-                writer.append_data(image.convert('P'))
+                writer.append_data(image.convert('P').resize((size*SCREEN_SIZE, size*32)))
+
+        print("Done")
 
     def get_binary_array_from_buffer(self, buffer):
         binary_array = [[0 for _ in range(SCREEN_SIZE)] for _ in range(32)]

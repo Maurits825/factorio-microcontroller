@@ -205,6 +205,8 @@ class FactorioCompiler:
 
     def get_eval_py_literal(self, instructions):
         eval_py = ''.join(instructions[1:]).replace('EVPY', '')
+        # TODO maybe can also replace all chars that arent numbers and bitwise/arithmetic ops
+        # surely that will make the eval safe, wrap the eval in an int() also?
         literal = eval(eval_py, {})
         return '{0:024b}'.format(literal)
 
