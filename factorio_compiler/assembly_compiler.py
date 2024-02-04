@@ -53,6 +53,7 @@ class AssemblyCompiler:
         binary_file_name = file_name[:-4] + '.bin'
         with open(binary_file_name, 'w') as f:
             f.write('\n'.join(binary_line.binary for binary_line in binary_lines))
+        return binary_file_name
 
     def get_assembly_lines(self, raw_assembly_lines: list[str]) -> list[AssemblyLine]:
         assembly_lines = []
@@ -163,11 +164,14 @@ class AssemblyCompiler:
                 instruction_binary = self.opcodes[assembly_line.assembly_token.keyword]
                 literal = self.get_literal(assembly_line, function_addresses[function_name], function_addresses,
                                            goto_map[function_name], variable_map[function_name])
-                binary_line = BinaryLine(instruction_binary + literal, assembly_line)
+                binary_line = BinaryLine(literal + instruction_binary, assembly_line)
                 function_binary.append(binary_line)
             binary_map[function_name] = function_binary
 
         all_binary_lines = [binary_line for binary_line in binary_map[MAIN_FUNCTION_NAME]]
+        # add halt between program memory and function memory
+        all_binary_lines.append(BinaryLine('{0:032b}'.format(0), None))
+
         for function_name, binary_lines in binary_map.items():
             if function_name == MAIN_FUNCTION_NAME:
                 continue
@@ -185,7 +189,7 @@ class AssemblyCompiler:
         if token.keyword == 'GOTO':
             label = token.arguments[0]
             if label in goto_map:
-                literal = goto_map[label] + function_address - 1
+                literal = goto_map[label] + function_address
                 return '{0:024b}'.format(literal)
             else:
                 raise Exception(ErrorLogger.format_error("GOTO label does not exist", label, assembly_line))

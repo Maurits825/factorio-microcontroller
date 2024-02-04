@@ -4,7 +4,7 @@ from pathlib import Path
 
 import click
 
-from factorio_microcontroller import factorio_compiler
+from factorio_compiler.assembly_compiler import AssemblyCompiler
 from factorio_microcontroller_simulator.igpu_sim import IGPUSim
 from factorio_microcontroller_simulator.input_sim import InputSim
 from instruction_executor import InstructionExecutor, MicrocontrollerState
@@ -110,14 +110,14 @@ class FactorioMicrocontrollerSim:
 @click.option('--verbose', '-v', is_flag=True, show_default=True, default=False, help="Print out state information")
 @click.option('--enable-igpu-sim', '-g', is_flag=True, show_default=True, default=False, help="Enable igpu sim")
 def main(binary, assembly, verbose, enable_igpu_sim):
-    if binary:
-        factorio_microcontroller_sim = FactorioMicrocontrollerSim(binary)
-        factorio_microcontroller_sim.run(verbose, enable_igpu_sim)
+    if not binary:
+        compiler = AssemblyCompiler()
+        binary_file_name = compiler.compile(assembly)
     else:
-        compiler = factorio_compiler.FactorioCompiler()
-        binary_file = compiler.compile_to_bin(assembly)
-        factorio_microcontroller_sim = FactorioMicrocontrollerSim(binary_file)
-        factorio_microcontroller_sim.run(verbose, enable_igpu_sim)
+        binary_file_name = binary
+
+    factorio_microcontroller_sim = FactorioMicrocontrollerSim(binary_file_name)
+    factorio_microcontroller_sim.run(verbose, enable_igpu_sim)
 
 
 if __name__ == '__main__':

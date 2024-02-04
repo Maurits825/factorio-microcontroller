@@ -1,118 +1,119 @@
 VAR pos_x
 VAR pos_y
-MOVLW 0d18
+MOVLW 18
 MOVWF pos_x
-MOVLW 0d16
+MOVLW 16
 MOVWF pos_y
-VAR pos_x_y
+VAR pos_x_y // for igpu args
 
 VAR paddle1_pos_x
-MOVLW 0d16
+MOVLW 16
 MOVWF paddle1_pos_x
 VAR paddle1_line
 
-# set velocity to right and top
+// set velocity to right and top
 VAR v_x
 VAR v_y
-MOVLW 0d2
+MOVLW 2
 MOVWF v_x
 MOVWF v_y
 
-# draw background in buffer 1
-IGSETFL 0d1
+// draw background in buffer 1
+IGSETFL 1
 IGDRAWRL EVPY((5 << 18) | (31 << 12) | (0 << 6) | (0))
 IGDRAWRL EVPY((36 << 18) | (31 << 12) | ((36-5) << 6) | (0))
-IGSETFL 0d0
+IGSETFL 0
 
 VAR loop_count
 
-# main loop
-loop
-IGCLEAR 0d0
+// main loop
+LABEL LOOP
+IGCLEAR 0
 
-# pack ball args
+// pack ball args
 MOVFW pos_x
-ROLWL,w 0d6
+ROLWL,w 6
 ORWF,w pos_y
 MOVWF pos_x_y
 
-# render ball
+// render ball
 IGDRAWPF pos_x_y
 
-# pack paddle1 args
+// pack paddle1 args
 MOVLW EVPY(5 << 12)
 MOVWF paddle1_line
 MOVFW paddle1_pos_x
-# sub 2 because x is middle of paddle
-SUBWL,w 0d2
-ROLWL,w 0d6
+// sub 2 because x is middle of paddle
+SUBWL,w 2
+ROLWL,w 6
 ORWF,f paddle1_line
 
-# render paddle1
+// render paddle1
 IGDRAWHF paddle1_line
 
-IGRENDER 0d0
+IGRENDER 0
 
-# check if pos x == 5 and set v_x to the right -> 2
+// check if pos x == 5 and set v_x to the right -> 2
 MOVFW pos_x
-EQWL,1 0d5
-MOVLW 0d2
+EQWL,1 5
+MOVLW 2
 MOVWF v_x
 
-# check if pos x == 36-5 and set v_x to the left -> 1
-EQWL,1 0d30
-MOVLW 0d1
+// check if pos x == 36-5 and set v_x to the left -> 1
+EQWL,1 30
+MOVLW 1
 MOVWF v_x
 
-# check if pos y == 0 and set v_y to the top -> 2
+// check if pos y == 1 and set v_y to the top -> 2
 MOVFW pos_y
-EQWL,1 0d0
-MOVLW 0d2
+EQWL,1 1
+MOVLW 2
 MOVWF v_y
 
-# check if pos y == 31 and set v_y to the bottom -> 1
-EQWL,1 0d31
-MOVLW 0d1
+// check if pos y == 31 and set v_y to the bottom -> 1
+EQWL,1 31
+MOVLW 1
 MOVWF v_y
 
-# double DECRF hack for x and y because its an if not if-else
-# check v_x and update pos_x
+// double DECRF hack for x and y because its an if not if-else
+// check v_x and update pos_x
 MOVFW v_x
-EQWL,1 0d1
+EQWL,1 1
 DECRF pos_x
 DECRF pos_x
 INCRF pos_x
 
-# check v_y and update pos_y
+// check v_y and update pos_y
 MOVFW v_y
-EQWL,1 0d1
+EQWL,1 1
 DECRF pos_y
 DECRF pos_y
 INCRF pos_y
 
-# move paddle 1
-# first check if ball is going down
+// move paddle 1
+// first check if ball is going down
+HALT 1
 MOVFW v_y
-EQWL,0 0d2
+EQWL,0 2
 GOTO SKIP_PADDLE1_MOVE
-# check if its halfway, < 16
+// check if its halfway, < 16
 MOVFW pos_y
-GRTWL,0 0d16
+GRTWL,0 16
 GOTO SKIP_PADDLE1_MOVE
-# check if paddle is already in place
+// check if paddle is already in place
 MOVFW pos_x
 EQWF,0 paddle1_pos_x
 GOTO SKIP_PADDLE1_MOVE
 
-# ball is close, move the paddle
+// ball is close, move the paddle
 GRTWF,1 paddle1_pos_x
 INCRF paddle1_pos_x
 INCRF paddle1_pos_x
 DECRF paddle1_pos_x
 
-SKIP_PADDLE1_MOVE
+LABEL SKIP_PADDLE1_MOVE
 
 INCRF loop_count
-MOVLW 0d300
+MOVLW 300
 GRTWF,0 loop_count
-GOTO loop
+GOTO LOOP
