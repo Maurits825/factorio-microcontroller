@@ -5,14 +5,13 @@ import click
 from pathlib import Path
 
 from factorio_compiler.assembly_line import AssemblyLine, AssemblyToken
+from factorio_compiler.binary_line import BinaryLine
+from factorio_compiler.error_logger import ErrorLogger
 from factorio_compiler.preprocessor import Preprocessor
+from factorio_compiler.reserved_identifiers import RESERVED_IDENTIFIERS, ReservedIdentifier, MAIN_FUNCTION_NAME
 from factorio_compiler.token_type import TokenType
 
 RESOURCE_FOLDER = Path(__file__).parent.parent / "resources"
-
-RESERVED_IDENTIFIERS = [
-    "LABEL", "FN"
-]
 
 
 class AssemblyCompiler:
@@ -39,14 +38,21 @@ class AssemblyCompiler:
 
         assembly_lines = self.get_assembly_lines(raw_assembly_lines)
         Preprocessor.preprocess(assembly_lines)
-        scoped_assembly_lines = self.split_scopes(assembly_lines)
+        function_scopes = self.split_scopes(assembly_lines)
 
-        # TODO we want to have the main and functions the same so that we then just have one fn run on them?
-        # we need to be able to resolve gotos and fn calls -> have to expand FN and CALL, and remove LABEL
-        # then can count and create goto and call maps with program counter
-        # TODO remove goto labels, split functions, add VAR for input -> we want to be able to resolve call and goto
-        # first split functions
-        a = 2
+        # remove FN lines
+        for function_name in function_scopes.keys():
+            if function_name != MAIN_FUNCTION_NAME:
+                del function_scopes[function_name][0]
+
+        goto_map = self.get_goto_map(function_scopes)
+        function_addresses = self.get_function_addresses(function_scopes)
+        variable_map = self.get_variables_map(function_scopes)
+
+        binary_lines = self.get_binary_lines(function_scopes, goto_map, function_addresses, variable_map)
+        binary_file_name = file_name[:-4] + '.bin'
+        with open(binary_file_name, 'w') as f:
+            f.write('\n'.join(binary_line.binary for binary_line in binary_lines))
 
     def get_assembly_lines(self, raw_assembly_lines: list[str]) -> list[AssemblyLine]:
         assembly_lines = []
@@ -88,22 +94,131 @@ class AssemblyCompiler:
         return AssemblyToken(token_type, keyword, arguments)
 
     def split_scopes(self, assembly_lines: list[AssemblyLine]) -> dict[str, list[AssemblyLine]]:
-        scoped_lines = {"main": [], "functions": []}
+        function_scopes = {MAIN_FUNCTION_NAME: []}
 
-        current_scope = scoped_lines["main"]
+        current_scope = function_scopes[MAIN_FUNCTION_NAME]
         for assembly_line in assembly_lines:
-            if 'FN' in assembly_line.line:
-                current_scope = scoped_lines["functions"]
+            if assembly_line.assembly_token.keyword == ReservedIdentifier.FUNCTION.value:
+                if len(assembly_line.assembly_token.arguments) != 1:
+                    raise Exception(ErrorLogger.format_error("Syntax error", assembly_line.line, assembly_line))
+                function_name = assembly_line.assembly_token.arguments[0]
+                function_scopes[function_name] = []
+                current_scope = function_scopes[function_name]
                 current_scope.append(assembly_line)
-            elif 'RET' in assembly_line.line:
+            elif 'RET' in assembly_line.assembly_token.keyword:
                 current_scope.append(assembly_line)
-                current_scope = scoped_lines["main"]
+                current_scope = function_scopes[MAIN_FUNCTION_NAME]
             else:
                 current_scope.append(assembly_line)
 
-        return scoped_lines
+        return function_scopes
 
-    # def split_function
+    def get_goto_map(self, function_scopes: dict[str, list[AssemblyLine]]):
+        goto_map = dict()
+        for function_name, assembly_lines in function_scopes.items():
+            function_goto = dict()
+            count = 1
+            for assembly_line in assembly_lines[:]:
+                token = assembly_line.assembly_token
+                if token.keyword == ReservedIdentifier.GOTO_LABEL.value:
+                    function_goto[token.arguments[0]] = count
+                    assembly_lines.remove(assembly_line)
+                else:
+                    count += 1
+            goto_map[function_name] = function_goto
+        return goto_map
+
+    def get_function_addresses(self, function_scopes: dict[str, list[AssemblyLine]]):
+        function_addresses = dict()
+        function_addresses[MAIN_FUNCTION_NAME] = 0
+        current_address = len(function_scopes[MAIN_FUNCTION_NAME]) + 2
+        for function_name, assembly_lines in function_scopes.items():
+            if function_name == MAIN_FUNCTION_NAME:
+                continue
+            function_addresses[function_name] = current_address
+            current_address += len(assembly_lines)
+        return function_addresses
+
+    def get_variables_map(self, function_scopes: dict[str, list[AssemblyLine]]):
+        variables_map = dict()
+        for function_name, assembly_lines in function_scopes.items():
+            function_variables = dict()
+            address = 0
+            for assembly_line in assembly_lines:
+                token = assembly_line.assembly_token
+                if token.keyword == 'VAR':
+                    variable_name = token.arguments[0]
+                    if variable_name in function_variables:
+                        raise Exception(ErrorLogger.format_error("Duplicate variable", variable_name, assembly_line))
+                    function_variables[variable_name] = address
+                    address += 1
+            variables_map[function_name] = function_variables
+        return variables_map
+
+    def get_binary_lines(self, function_scopes, goto_map, function_addresses, variable_map) -> list[BinaryLine]:
+        binary_map = dict()
+        for function_name, assembly_lines in function_scopes.items():
+            function_binary = []
+            for assembly_line in assembly_lines:
+                instruction_binary = self.opcodes[assembly_line.assembly_token.keyword]
+                literal = self.get_literal(assembly_line, function_addresses[function_name], function_addresses,
+                                           goto_map[function_name], variable_map[function_name])
+                binary_line = BinaryLine(instruction_binary + literal, assembly_line)
+                function_binary.append(binary_line)
+            binary_map[function_name] = function_binary
+
+        all_binary_lines = [binary_line for binary_line in binary_map[MAIN_FUNCTION_NAME]]
+        for function_name, binary_lines in binary_map.items():
+            if function_name == MAIN_FUNCTION_NAME:
+                continue
+            for binary_line in binary_lines:
+                all_binary_lines.append(binary_line)
+
+        return all_binary_lines
+
+    def get_literal(self, assembly_line: AssemblyLine, function_address, function_addresses, goto_map,
+                    variables) -> str:
+        token = assembly_line.assembly_token
+        if not token.arguments:
+            return '{0:024b}'.format(0)
+
+        if token.keyword == 'GOTO':
+            label = token.arguments[0]
+            if label in goto_map:
+                literal = goto_map[label] + function_address - 1
+                return '{0:024b}'.format(literal)
+            else:
+                raise Exception(ErrorLogger.format_error("GOTO label does not exist", label, assembly_line))
+
+        argument = token.arguments[0]
+        if re.match(r"^EVPY", argument):
+            eval_argument = ''.join(token.arguments)
+            try:
+                return self.eval_py_literal(eval_argument)
+            except ValueError:
+                raise Exception(ErrorLogger.format_error("Invalid char in EVPY", eval_argument, assembly_line))
+
+        if argument in variables:
+            return '{0:024b}'.format(variables[argument])
+        if argument in function_addresses:
+            return '{0:024b}'.format(function_addresses[argument])
+
+        if re.match(r"^0b", argument):
+            return '{0:024b}'.format(int(argument.replace('0b', ''), 2))
+        if re.match(r"^0x", argument):
+            return '{0:024b}'.format(int(argument, 16))
+        if re.match(r"\d*", argument):
+            return '{0:024b}'.format(int(argument))
+
+        raise Exception(ErrorLogger.format_error("Error with literal", argument, assembly_line))
+
+    def eval_py_literal(self, eval_argument):
+        eval_py = eval_argument.replace('EVPY', '')
+        if re.match(r".*[A-Za-z]", eval_py):
+            raise ValueError
+        else:
+            literal = int(eval(eval_py, {}))
+            return '{0:024b}'.format(literal)
 
 
 @click.command()
