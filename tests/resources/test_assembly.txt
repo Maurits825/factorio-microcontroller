@@ -1,4 +1,4 @@
-#random op codes, just for testing the compiler
+//random op codes, just for testing the compiler
 VAR a
 VAR var_b
 MOVLW 0xABCDEF
@@ -6,7 +6,7 @@ MOVWF a
 
 CALL fib
 
-loop
+LABEL loop
 DECRF a
 WOUTF,2 a
 PULSE
@@ -14,15 +14,14 @@ GOTO loop
 
 FN fib
 VAR input_n
-MOVLW 0d2
-# 2 > input_n
-fn_label
+MOVLW 2
+// 2 > input_n
+LABEL fn_label
 GRTWF,1 input_n
 GOTO fn_label
 RETFW input_n
-END
 
-another_loop
+LABEL another_loop
 MOVLW 0b111111111111111111111011
 MOVWF var_b
 WOUTF,1 var_b
@@ -31,23 +30,11 @@ GOTO another_loop
 FN another_fn
 PULSE
 RETLW 0b000000000000000000001100
-END
 
 CALL another_fn
 CALL foo
 
 FN foo
 VAR a
-RET
 ROLF,f a
-END
-
-FN with_input_args a b c
-VAR d
-WOUTF,1 a
-WOUTF,1 b
-WOUTF,1 c
-RINF,1 a
-RINF,2 a
 RET
-END

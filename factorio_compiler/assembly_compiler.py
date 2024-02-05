@@ -118,7 +118,7 @@ class AssemblyCompiler:
         goto_map = dict()
         for function_name, assembly_lines in function_scopes.items():
             function_goto = dict()
-            count = 1
+            count = 0
             for assembly_line in assembly_lines[:]:
                 token = assembly_line.assembly_token
                 if token.keyword == ReservedIdentifier.GOTO_LABEL.value:
@@ -131,7 +131,7 @@ class AssemblyCompiler:
 
     def get_function_addresses(self, function_scopes: dict[str, list[AssemblyLine]]):
         function_addresses = dict()
-        function_addresses[MAIN_FUNCTION_NAME] = 0
+        function_addresses[MAIN_FUNCTION_NAME] = 1
         current_address = len(function_scopes[MAIN_FUNCTION_NAME]) + 2
         for function_name, assembly_lines in function_scopes.items():
             if function_name == MAIN_FUNCTION_NAME:
@@ -144,7 +144,7 @@ class AssemblyCompiler:
         variables_map = dict()
         for function_name, assembly_lines in function_scopes.items():
             function_variables = dict()
-            address = 0
+            address = 1
             for assembly_line in assembly_lines:
                 token = assembly_line.assembly_token
                 if token.keyword == 'VAR':
