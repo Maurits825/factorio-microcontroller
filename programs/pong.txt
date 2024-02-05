@@ -1,4 +1,6 @@
 #define MAX_LOOP_COUNT 300
+#define PADDLE1_MOVE_RANGE 6
+#define PADDLE2_MOVE_RANGE 25
 
 VAR pos_x
 VAR pos_y
@@ -12,6 +14,11 @@ VAR paddle1_pos_x
 MOVLW 16
 MOVWF paddle1_pos_x
 VAR paddle1_line
+
+VAR paddle2_pos_x
+MOVLW 16
+MOVWF paddle2_pos_x
+VAR paddle2_line
 
 // set velocity to right and top
 VAR v_x
@@ -53,6 +60,18 @@ ORWF,f paddle1_line
 // render paddle1
 IGDRAWHF paddle1_line
 
+// pack paddle2 args
+MOVLW EVPY((5 << 12) | 31)
+MOVWF paddle2_line
+MOVFW paddle2_pos_x
+// sub 2 because x is middle of paddle
+SUBWL,w 2
+ROLWL,w 6
+ORWF,f paddle2_line
+
+// render paddle2
+IGDRAWHF paddle2_line
+
 IGRENDER
 
 // check if pos x == 5 and set v_x to the right -> 2
@@ -72,8 +91,8 @@ EQWL,1 1
 MOVLW 2
 MOVWF v_y
 
-// check if pos y == 31 and set v_y to the bottom -> 1
-EQWL,1 31
+// check if pos y == 30 and set v_y to the bottom -> 1
+EQWL,1 30
 MOVLW 1
 MOVWF v_y
 
@@ -97,22 +116,44 @@ INCRF pos_y
 MOVFW v_y
 EQWL,0 2
 GOTO SKIP_PADDLE1_MOVE
-// check if its halfway, < 16
+// check if its close
 MOVFW pos_y
-GRTWL,0 16
+GRTWL,0 PADDLE1_MOVE_RANGE
 GOTO SKIP_PADDLE1_MOVE
 // check if paddle is already in place
 MOVFW pos_x
 EQWF,0 paddle1_pos_x
 GOTO SKIP_PADDLE1_MOVE
 
-// ball is close, move the paddle
+// ball is close, move paddle1
 GRTWF,1 paddle1_pos_x
 INCRF paddle1_pos_x
 INCRF paddle1_pos_x
 DECRF paddle1_pos_x
 
 LABEL SKIP_PADDLE1_MOVE
+
+// move paddle 2
+// first check if ball is going up
+MOVFW v_y
+EQWL,0 1
+GOTO SKIP_PADDLE2_MOVE
+// check if its close
+MOVFW pos_y
+LESSWL,0 PADDLE2_MOVE_RANGE
+GOTO SKIP_PADDLE2_MOVE
+// check if paddle is already in place
+MOVFW pos_x
+EQWF,0 paddle2_pos_x
+GOTO SKIP_PADDLE2_MOVE
+
+// ball is close, move paddle2
+GRTWF,1 paddle2_pos_x
+INCRF paddle2_pos_x
+INCRF paddle2_pos_x
+DECRF paddle2_pos_x
+
+LABEL SKIP_PADDLE2_MOVE
 
 INCRF loop_count
 MOVLW MAX_LOOP_COUNT
