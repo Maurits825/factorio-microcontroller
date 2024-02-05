@@ -36,6 +36,10 @@ class IGPUInstructionExecutor:
         elif 'IGDRAWH' in opcode:
             for x in range(input_args.x, input_args.x + input_args.b):
                 active_buffer[x] = active_buffer[x] | (1 << input_args.y)
+        elif 'IGDRAWV' in opcode:
+            active_buffer[input_args.x] = active_buffer[input_args.x] | (
+                    ((1 << (input_args.b + 1)) - 1) << input_args.y
+            )
         else:
             raise Exception("Unknown igpu operation: " + opcode)
 
