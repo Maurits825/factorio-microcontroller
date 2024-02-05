@@ -1,3 +1,5 @@
+#define MAX_LOOP_COUNT 300
+
 VAR pos_x
 VAR pos_y
 MOVLW 18
@@ -28,7 +30,7 @@ VAR loop_count
 
 // main loop
 LABEL LOOP
-IGCLEAR 0
+IGCLEAR
 
 // pack ball args
 MOVFW pos_x
@@ -51,7 +53,7 @@ ORWF,f paddle1_line
 // render paddle1
 IGDRAWHF paddle1_line
 
-IGRENDER 0
+IGRENDER
 
 // check if pos x == 5 and set v_x to the right -> 2
 MOVFW pos_x
@@ -92,7 +94,6 @@ INCRF pos_y
 
 // move paddle 1
 // first check if ball is going down
-HALT 1
 MOVFW v_y
 EQWL,0 2
 GOTO SKIP_PADDLE1_MOVE
@@ -114,6 +115,6 @@ DECRF paddle1_pos_x
 LABEL SKIP_PADDLE1_MOVE
 
 INCRF loop_count
-MOVLW 300
+MOVLW MAX_LOOP_COUNT
 GRTWF,0 loop_count
 GOTO LOOP

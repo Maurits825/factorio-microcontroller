@@ -1,15 +1,15 @@
 VAR counter
 GOTO reset
 
-loop
+LABEL loop
 GRTWF,2 counter
 INCRF counter
 WOUTF,2 counter
 GOTO loop
 GOTO reset
 
-reset
-MOVLW 0d0
+LABEL reset
+MOVLW 0
 MOVWF counter
-MOVLW 0d9
+MOVLW 0
 GOTO loop
