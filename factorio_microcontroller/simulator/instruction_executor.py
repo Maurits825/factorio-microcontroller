@@ -1,7 +1,7 @@
 import re
 
-from factorio_microcontroller_simulator.igpu_instruction_executor import IGPUInstructionExecutor
-from factorio_microcontroller_simulator.microcontroller_state import MicrocontrollerState
+from simulator.igpu_instruction_executor import IGPUInstructionExecutor
+from simulator.microcontroller_state import MicrocontrollerState
 
 ALU_OPERATIONS = [
     "ADD", "SUB", "MUL", "DIV",

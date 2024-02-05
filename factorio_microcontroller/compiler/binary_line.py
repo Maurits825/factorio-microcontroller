@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from factorio_compiler.assembly_line import AssemblyLine
+from compiler.assembly_line import AssemblyLine
 
 
 @dataclass()

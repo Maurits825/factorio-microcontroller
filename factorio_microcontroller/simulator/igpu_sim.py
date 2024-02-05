@@ -1,9 +1,7 @@
 from pathlib import Path
 
-import numpy as np
-
-from factorio_microcontroller_simulator.constants import SCREEN_SIZE
-from factorio_microcontroller_simulator.igpu_state import IGPUState
+from simulator.constants import SCREEN_SIZE
+from simulator.igpu_state import IGPUState
 from PIL import Image
 import imageio
 

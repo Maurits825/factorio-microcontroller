@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from factorio_microcontroller_simulator.constants import SCREEN_SIZE
+from simulator.constants import SCREEN_SIZE
 
 
 @dataclass()

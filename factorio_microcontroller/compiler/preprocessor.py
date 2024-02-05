@@ -1,5 +1,5 @@
-from factorio_compiler.assembly_line import AssemblyLine
-from factorio_compiler.token_type import TokenType
+from compiler.assembly_line import AssemblyLine
+from compiler.token_type import TokenType
 
 
 class Preprocessor:

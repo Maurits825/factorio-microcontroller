@@ -4,14 +4,15 @@ import re
 import click
 from pathlib import Path
 
-from factorio_compiler.assembly_line import AssemblyLine, AssemblyToken
-from factorio_compiler.binary_line import BinaryLine
-from factorio_compiler.error_logger import ErrorLogger
-from factorio_compiler.preprocessor import Preprocessor
-from factorio_compiler.reserved_identifiers import RESERVED_IDENTIFIERS, ReservedIdentifier, MAIN_FUNCTION_NAME
-from factorio_compiler.token_type import TokenType
+from compiler.assembly_line import AssemblyLine, AssemblyToken
+from compiler.binary_line import BinaryLine
+from compiler.error_logger import ErrorLogger
+from compiler.preprocessor import Preprocessor
+from compiler.reserved_identifiers import RESERVED_IDENTIFIERS, ReservedIdentifier, MAIN_FUNCTION_NAME
 
-RESOURCE_FOLDER = Path(__file__).parent.parent / "resources"
+from compiler.token_type import TokenType
+
+RESOURCE_FOLDER = Path(__file__).parent.parent.parent / "resources"
 
 
 class AssemblyCompiler:

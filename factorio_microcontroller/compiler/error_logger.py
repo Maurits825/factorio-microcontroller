@@ -1,4 +1,4 @@
-from factorio_compiler.assembly_line import AssemblyLine
+from compiler.assembly_line import AssemblyLine
 
 
 class ErrorLogger:

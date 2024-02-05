@@ -1,8 +1,8 @@
 import click
-import program_to_rom_blueprint
 import pyperclip
 
-from factorio_compiler.assembly_compiler import AssemblyCompiler
+from compiler.assembly_compiler import AssemblyCompiler
+from scripts.program_to_rom_blueprint import Program2ROM
 
 
 @click.command()
@@ -13,7 +13,7 @@ def main(assembly, clipboard):
     binary_file = assembly[:-4] + '.bin'
     compiler.compile(assembly)
 
-    binary2rom = program_to_rom_blueprint.Program2ROM()
+    binary2rom = Program2ROM()
     program = binary2rom.convert_file_to_base10_list(binary_file)
     program_rom_blueprint = binary2rom.convert_program_to_rom(program)
     if clipboard:

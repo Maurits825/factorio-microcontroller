@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from factorio_compiler.token_type import TokenType
+from compiler.token_type import TokenType
 
 
 @dataclass()

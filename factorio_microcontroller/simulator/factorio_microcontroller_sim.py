@@ -4,12 +4,12 @@ from pathlib import Path
 
 import click
 
-from factorio_compiler.assembly_compiler import AssemblyCompiler
-from factorio_microcontroller_simulator.igpu_sim import IGPUSim
-from factorio_microcontroller_simulator.input_sim import InputSim
+from compiler.assembly_compiler import AssemblyCompiler
+from simulator.igpu_sim import IGPUSim
+from simulator.input_sim import InputSim
 from instruction_executor import InstructionExecutor, MicrocontrollerState
 
-RESOURCE_FOLDER = Path(__file__).parent.parent / "resources"
+RESOURCE_FOLDER = Path(__file__).parent.parent.parent / "resources"
 CPU_BASE_SPEED = 0.375
 CYCLE_TIMEOUT = 50_000
 

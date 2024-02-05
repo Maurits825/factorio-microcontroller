@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from factorio_microcontroller_simulator.constants import MEMORY_SIZE
-from factorio_microcontroller_simulator.igpu_state import IGPUState
+from simulator.constants import MEMORY_SIZE
+from simulator.igpu_state import IGPUState
 
 
 @dataclass()

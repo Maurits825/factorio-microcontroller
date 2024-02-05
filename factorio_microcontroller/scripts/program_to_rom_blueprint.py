@@ -4,12 +4,12 @@ import copy
 from base64 import b64decode, b64encode
 import click
 import pyperclip
+
 max_signal_per_comb = 20
 bits = 32
 
 
 class Program2ROM:
-
     def __init__(self):
         blueprint_string = self.load_blueprint_strings()
         constant_comb_blueprint = blueprint_string['constant_combinator']
