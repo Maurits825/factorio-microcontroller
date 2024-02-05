@@ -1,5 +1,6 @@
 import json
 import re
+from dataclasses import dataclass
 
 import click
 from pathlib import Path
@@ -13,6 +14,13 @@ from compiler.reserved_identifiers import RESERVED_IDENTIFIERS, ReservedIdentifi
 from compiler.token_type import TokenType
 
 RESOURCE_FOLDER = Path(__file__).parent.parent.parent / "resources"
+
+
+@dataclass()
+class DisassemblerInfo:
+    function_scopes: dict[str, list[AssemblyLine]]
+    function_addresses: dict[str, int]
+    variable_addresses: dict[str, dict[str, int]]
 
 
 class AssemblyCompiler:
@@ -33,7 +41,7 @@ class AssemblyCompiler:
                 all_opcodes[opcode] = binary
         return all_opcodes
 
-    def compile(self, file_name):
+    def compile(self, file_name) -> (str, DisassemblerInfo):
         with open(file_name) as f:
             raw_assembly_lines = f.read().splitlines()
 
@@ -41,10 +49,11 @@ class AssemblyCompiler:
         Preprocessor.preprocess(assembly_lines)
         function_scopes = self.split_scopes(assembly_lines)
 
-        # remove FN lines
+        # remove FN and END lines
         for function_name in function_scopes.keys():
             if function_name != MAIN_FUNCTION_NAME:
                 del function_scopes[function_name][0]
+                del function_scopes[function_name][-1]
 
         goto_map = self.get_goto_map(function_scopes)
         function_addresses = self.get_function_addresses(function_scopes)
@@ -54,7 +63,9 @@ class AssemblyCompiler:
         binary_file_name = file_name[:-4] + '.bin'
         with open(binary_file_name, 'w') as f:
             f.write('\n'.join(binary_line.binary for binary_line in binary_lines))
-        return binary_file_name
+
+        disassembler_info = DisassemblerInfo(function_scopes, function_addresses, variable_map)
+        return binary_file_name, disassembler_info
 
     def get_assembly_lines(self, raw_assembly_lines: list[str]) -> list[AssemblyLine]:
         assembly_lines = []
@@ -107,7 +118,7 @@ class AssemblyCompiler:
                 function_scopes[function_name] = []
                 current_scope = function_scopes[function_name]
                 current_scope.append(assembly_line)
-            elif 'RET' in assembly_line.assembly_token.keyword:
+            elif assembly_line.assembly_token.keyword == ReservedIdentifier.FUNCTION_END.value:
                 current_scope.append(assembly_line)
                 current_scope = function_scopes[MAIN_FUNCTION_NAME]
             else:

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from simulator.constants import MEMORY_SIZE
+from simulator.context_state import ContextState
 from simulator.igpu_state import IGPUState
 
 
@@ -15,6 +16,8 @@ class MicrocontrollerState:
     output_registers: list
     input_values: list
     igpu_state: IGPUState
+
+    context_state: ContextState | None = None
 
     def __init__(self):
         self.w_register = 0

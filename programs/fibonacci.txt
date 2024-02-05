@@ -1,16 +1,20 @@
-# compute the nth Fibonacci number, starting at 1
+// compute the nth Fibonacci number, starting at 1
 VAR n
-MOVLW 0d10
+MOVLW 10
 MOVWF n
+
+MOVFW n
+MOVWF 2 //to get n in our function scope
 CALL fibonacci n
 
-FN fibonacci n
-# if (n <= 1), n < 2, F < W, W > F
-MOVLW 0d2
+FN fibonacci
+VAR n
+// if (n <= 1), n < 2, F < W, W > F
+MOVLW 2
 GRTWF,0 n
 RETFW n
 
-# return fib(n-1) + fib(n-2);
+// return fib(n-1) + fib(n-2);
 VAR n_minus_1
 MOVFW n
 MOVWF n_minus_1
@@ -21,10 +25,16 @@ MOVWF n_minus_2
 DECRF n_minus_2
 DECRF n_minus_2
 
+//load input arg
+MOVFW n_minus_1
+MOVWF 4
 CALL fibonacci n_minus_1
 VAR ret_1
 MOVWF ret_1
 
+//load input arg
+MOVFW n_minus_2
+MOVWF 5
 CALL fibonacci n_minus_2
 VAR ret_2
 MOVWF ret_2
