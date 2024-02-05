@@ -1,16 +1,17 @@
 import click
-import factorio_compiler
 import program_to_rom_blueprint
 import pyperclip
+
+from factorio_compiler.assembly_compiler import AssemblyCompiler
 
 
 @click.command()
 @click.option('--assembly', '-a', help='Name of the assembly file')
 @click.option('--clipboard', '-c', help='Copy blueprint to the clipboard', is_flag=True)
 def main(assembly, clipboard):
-    compiler = factorio_compiler.FactorioCompiler()
+    compiler = AssemblyCompiler()
     binary_file = assembly[:-4] + '.bin'
-    compiler.compile_to_bin(assembly)
+    compiler.compile(assembly)
 
     binary2rom = program_to_rom_blueprint.Program2ROM()
     program = binary2rom.convert_file_to_base10_list(binary_file)
