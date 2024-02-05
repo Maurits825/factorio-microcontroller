@@ -1,9 +1,7 @@
-import sys
 from pathlib import Path
 import unittest
 
-sys.path.append(str(Path(__file__).parent.parent / "factorio_microcontroller_simulator"))
-from factorio_microcontroller_simulator import factorio_microcontroller_sim
+from simulator.factorio_microcontroller_sim import FactorioMicrocontrollerSim
 
 TEST_RESOURCE_FOLDER = Path(__file__).parent.parent / "tests/resources"
 
@@ -11,7 +9,7 @@ TEST_RESOURCE_FOLDER = Path(__file__).parent.parent / "tests/resources"
 class FactorioMicrocontrollerSimTest(unittest.TestCase):
     def setUp(self):
         fib_binary_file = TEST_RESOURCE_FOLDER / "fibonacci_binary.txt"
-        self.simulator = factorio_microcontroller_sim.FactorioMicrocontrollerSim(fib_binary_file)
+        self.simulator = FactorioMicrocontrollerSim(fib_binary_file)
 
     def test_simulate_fibonacci(self):
         state = self.simulator.simulate(verbose=False, enable_igpu_sim=False)

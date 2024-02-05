@@ -3,7 +3,7 @@ import filecmp
 import os
 from pathlib import Path
 
-from factorio_compiler.assembly_compiler import AssemblyCompiler
+from compiler.assembly_compiler import AssemblyCompiler
 
 TEST_RESOURCE_FOLDER = Path(__file__).parent.parent / "tests/resources"
 
