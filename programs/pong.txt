@@ -4,19 +4,19 @@
 
 VAR pos_x
 VAR pos_y
-MOVLW 18
+MOVLW 28
 MOVWF pos_x
 MOVLW 16
 MOVWF pos_y
 VAR pos_x_y // for igpu args
 
 VAR paddle1_pos_x
-MOVLW 16
+MOVLW 18
 MOVWF paddle1_pos_x
 VAR paddle1_line
 
 VAR paddle2_pos_x
-MOVLW 16
+MOVLW 18
 MOVWF paddle2_pos_x
 VAR paddle2_line
 
@@ -72,7 +72,16 @@ ORWF,f paddle2_line
 IGDRAWHF paddle2_line
 
 IGRENDER
+
 // main logic ---------------------------------------------------------------------
+
+MOVFW pos_y
+EQWL,0 0 // check if p1 lost
+GOTO P2_WIN
+
+EQWL,0 31 // check if p2 lost
+GOTO P1_WIN
+
 // check if pos x == 5 and set v_x to the right -> 2
 MOVFW pos_x
 EQWL,1 5
@@ -92,24 +101,33 @@ MOVFW pos_x
 SUBWF,w paddle1_pos_x
 ADDWL,w 2 //half of paddle length
 GRTWL,0 4 //check if right side of paddle
-GOTO SKIP_BOUNCE
+GOTO SKIP_P1_BOUNCE
 LESSWL,0 0 //check if left side of paddle
-GOTO SKIP_BOUNCE
+GOTO SKIP_P1_BOUNCE
 
 //paddle is under, set v_y to the top -> 2
 MOVLW 2
 MOVWF v_y
 
-LABEL SKIP_BOUNCE
+LABEL SKIP_P1_BOUNCE
 
+//TODO could try make a func? pass paddle pos with W reg, return either 1 or 2 to set the velocity
 MOVFW pos_y
-EQWL,0 0 // check if p1 lost
-GOTO P2_WIN
+EQWL,8 30
+//now check if paddle1 is under
+MOVFW pos_x
+SUBWF,w paddle2_pos_x
+ADDWL,w 2 //half of paddle length
+GRTWL,0 4 //check if right side of paddle
+GOTO SKIP_P2_BOUNCE
+LESSWL,0 0 //check if left side of paddle
+GOTO SKIP_P2_BOUNCE
 
-// check if pos y == 30 and set v_y to the bottom -> 1
-EQWL,1 30
+//paddle is under, set v_y to the bottom -> 1
 MOVLW 1
 MOVWF v_y
+
+LABEL SKIP_P2_BOUNCE
 
 // double DECRF hack for x and y because its an if not if-else
 // check v_x and update pos_x
