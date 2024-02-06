@@ -18,15 +18,21 @@ class IGPUSim:
     def run(self):
         total_states = len(self.igpu_states)
         print("\nCreating gif ...")
-        size = 2
+        size = 4
 
-        with imageio.get_writer("screen.gif", mode='I', duration=5) as writer:
+        with imageio.get_writer("screen.gif", mode='I', duration=10) as writer:
             for i, state in enumerate(self.igpu_states):
+                # TODO make a input arg?
+                if i % 10 != 0 and i != len(self.igpu_states) - 1:
+                    continue
+
                 if i % 1000 == 0:
                     print("Processed: " + str(i) + "/" + str(total_states))
                 image = self.get_image_from_buffer(state.screen_buffer)
-                #image.save(IMAGES_FOLDER / ("screen_" + str(i) + ".png"))
                 writer.append_data(image.convert('P').resize((size*SCREEN_SIZE, size*32)))
+
+        image = self.get_image_from_buffer(state.screen_buffer)
+        image.save(IMAGES_FOLDER / "screen_end.png")
 
         print("Done")
 
