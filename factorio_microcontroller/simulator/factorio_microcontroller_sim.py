@@ -28,10 +28,12 @@ class FactorioMicrocontrollerSim:
 
     def run(self, verbose, enable_igpu_sim):
         decoded_instructions = InstructionDecoder.decode_all_instructions(self.binary)
-        self.simulate(decoded_instructions, verbose, enable_igpu_sim)
+        final_state = self.simulate(decoded_instructions, verbose, enable_igpu_sim)
 
         if enable_igpu_sim:
             self.igpu_sim.run()
+
+        return final_state
 
     def simulate(self, decoded_instructions, verbose, enable_igpu_sim):
         microcontroller_state = MicrocontrollerState()

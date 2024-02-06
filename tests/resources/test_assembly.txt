@@ -20,6 +20,7 @@ LABEL fn_label
 GRTWF,1 input_n
 GOTO fn_label
 RETFW input_n
+END
 
 LABEL another_loop
 MOVLW 0b111111111111111111111011
@@ -30,6 +31,7 @@ GOTO another_loop
 FN another_fn
 PULSE
 RETLW 0b000000000000000000001100
+END
 
 CALL another_fn
 CALL foo
@@ -38,3 +40,4 @@ FN foo
 VAR a
 ROLF,f a
 RET
+END

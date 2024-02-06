@@ -15,7 +15,7 @@ class FactorioCompilerTest(unittest.TestCase):
     # TODO could split test assembly bins into folders for each opcode ops like memory, i/o, alu...
     def test_compile_to_bin(self):
         assembly_file = TEST_RESOURCE_FOLDER / "test_assembly.txt"
-        binary_file = self.fc.compile(str(assembly_file))
+        binary_file, _ = self.fc.compile(str(assembly_file))
         expected_binary_file = TEST_RESOURCE_FOLDER / "test_bin_expected.bin"
 
         self.assertTrue(filecmp.cmp(expected_binary_file, binary_file))
