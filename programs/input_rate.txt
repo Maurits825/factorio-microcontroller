@@ -1,6 +1,6 @@
 VAR DELTA
-#9 instructions in between input reads, 9*1.33 = 12 seconds in between
-MOVLW 0d12
+//9 instructions in between input reads, 9*1.33 = 12 seconds in between
+MOVLW 12
 MOVWF DELTA
 
 VAR current_value
@@ -9,7 +9,7 @@ VAR rate
 
 RINF,1 current_value
 
-loop
+LABEL loop
 RINF,1 new_value
 
 MOVFW new_value
