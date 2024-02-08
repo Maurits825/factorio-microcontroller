@@ -3,6 +3,8 @@ from copy import deepcopy
 import click
 
 from compiler.assembly_compiler import AssemblyCompiler, DisassemblerInfo
+from compiler.assembly_line import AssemblyLine
+from compiler.reserved_identifiers import MAIN_FUNCTION_NAME
 from simulator.context_state import ContextState
 from simulator.igpu_sim import IGPUSim
 from simulator.input_sim import InputSim
@@ -44,8 +46,14 @@ class FactorioMicrocontrollerSim:
             # TODO maybe a json config with the input mock type and data (linear, random, exponential)
             microcontroller_state.input_values[0] = InputSim.get_linear_input(cycle_count, 2, 0)
 
+            scopes, assembly_line = self.get_assembly_line_and_scope(microcontroller_state)
             is_halt = self.instruction_executor.execute(opcode, literal, microcontroller_state)
-            self.update_context_state(microcontroller_state)
+            variables = self.get_variables(microcontroller_state, scopes[-1])
+            microcontroller_state.context_state = ContextState(
+                assembly_line=assembly_line,
+                scope='->'.join(scopes),
+                variables=variables
+            )
 
             if enable_igpu_sim:
                 self.igpu_sim.add_state(deepcopy(microcontroller_state.igpu_state))
@@ -62,36 +70,29 @@ class FactorioMicrocontrollerSim:
                 print("Would take " + str(round(cycle_count / (CPU_BASE_SPEED * 64))) + " seconds to complete.")
                 return microcontroller_state
 
-    def update_context_state(self, microcontroller_state: MicrocontrollerState):
-        if not self.disassembler_info:
-            return
+    def get_assembly_line_and_scope(self, microcontroller_state: MicrocontrollerState) -> (list[str], AssemblyLine):
+        current_scope = MAIN_FUNCTION_NAME
+        scopes = [current_scope]
+        for address in microcontroller_state.function_call_stack:
+            line_number = address - self.disassembler_info.function_addresses[current_scope] - 1
+            next_scope = self.disassembler_info.function_scopes[current_scope][line_number].assembly_token.arguments[0]
+            scopes.append(next_scope)
+            current_scope = next_scope
 
-        # find scope
-        current_scope = None
-        for scope, address in self.disassembler_info.function_addresses.items():
-            if (microcontroller_state.program_counter - 1) < address:
-                break
-            current_scope = scope
-
-        scope_line_number = (microcontroller_state.program_counter - 1 -
+        current_scope = scopes[-1]
+        scope_line_number = (microcontroller_state.program_counter -
                              self.disassembler_info.function_addresses[current_scope])
         try:
             assembly_line = self.disassembler_info.function_scopes[current_scope][scope_line_number]
         except IndexError:
-            return
+            assembly_line = AssemblyLine("", -1, "", None)
+        return scopes, assembly_line
 
+    def get_variables(self, microcontroller_state: MicrocontrollerState, current_scope) -> dict[str, int]:
         variables = dict()
         for variable_name, address in self.disassembler_info.variable_addresses[current_scope].items():
             variables[variable_name] = microcontroller_state.read_f_memory(address)
-
-        context_state = ContextState(
-            line_number=assembly_line.line_number,
-            line=assembly_line.raw_line,
-            scope=current_scope,
-            variables=variables
-        )
-
-        microcontroller_state.context_state = context_state
+        return variables
 
     @staticmethod
     def print_verbose(opcode, literal, cycle_count, microcontroller_state):
@@ -100,7 +101,7 @@ class FactorioMicrocontrollerSim:
 
         if microcontroller_state.context_state:
             context = microcontroller_state.context_state
-            print("Line: " + str(context.line_number) + ". " + context.line)
+            print("Line: " + str(context.assembly_line.line_number) + ". " + context.assembly_line.line)
             print("Opcode: " + str(opcode) + ", literal: " + str(literal))
             print("Output & W registers: " + str(microcontroller_state.output_registers) +
                   ", " + str(microcontroller_state.w_register))

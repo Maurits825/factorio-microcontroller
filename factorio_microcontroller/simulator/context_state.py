@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 
+from compiler.assembly_line import AssemblyLine
+
 
 @dataclass()
 class ContextState:
-    line_number: int
-    line: str
+    assembly_line: AssemblyLine
 
     scope: str
     variables: dict
