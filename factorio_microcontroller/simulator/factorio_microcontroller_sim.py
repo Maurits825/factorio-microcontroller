@@ -46,14 +46,17 @@ class FactorioMicrocontrollerSim:
             # TODO maybe a json config with the input mock type and data (linear, random, exponential)
             microcontroller_state.input_values[0] = InputSim.get_linear_input(cycle_count, 2, 0)
 
-            scopes, assembly_line = self.get_assembly_line_and_scope(microcontroller_state)
-            is_halt = self.instruction_executor.execute(opcode, literal, microcontroller_state)
-            variables = self.get_variables(microcontroller_state, scopes[-1])
-            microcontroller_state.context_state = ContextState(
-                assembly_line=assembly_line,
-                scope='->'.join(scopes),
-                variables=variables
-            )
+            if self.disassembler_info:
+                scopes, assembly_line = self.get_assembly_line_and_scope(microcontroller_state)
+                is_halt = self.instruction_executor.execute(opcode, literal, microcontroller_state)
+                variables = self.get_variables(microcontroller_state, scopes[-1])
+                microcontroller_state.context_state = ContextState(
+                    assembly_line=assembly_line,
+                    scope='->'.join(scopes),
+                    variables=variables
+                )
+            else:
+                is_halt = self.instruction_executor.execute(opcode, literal, microcontroller_state)
 
             if enable_igpu_sim:
                 self.igpu_sim.add_state(deepcopy(microcontroller_state.igpu_state))
