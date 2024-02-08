@@ -207,12 +207,6 @@ class AssemblyCompiler:
                 raise Exception(ErrorLogger.format_error("GOTO label does not exist", label, assembly_line))
 
         argument = token.arguments[0]
-        if re.match(r"^EVPY", argument):
-            eval_argument = ''.join(token.arguments)
-            try:
-                return self.eval_py_literal(eval_argument)
-            except ValueError:
-                raise Exception(ErrorLogger.format_error("Invalid char in EVPY", eval_argument, assembly_line))
 
         if argument in variables:
             return '{0:024b}'.format(variables[argument])
@@ -227,14 +221,6 @@ class AssemblyCompiler:
             return '{0:024b}'.format(int(argument))
 
         raise Exception(ErrorLogger.format_error("Error with literal", argument, assembly_line))
-
-    def eval_py_literal(self, eval_argument):
-        eval_py = eval_argument.replace('EVPY', '')
-        if re.match(r".*[A-Za-z]", eval_py):
-            raise ValueError
-        else:
-            literal = int(eval(eval_py, {}))
-            return '{0:024b}'.format(literal)
 
 
 @click.command()

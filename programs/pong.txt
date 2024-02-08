@@ -1,6 +1,8 @@
 #define MAX_LOOP_COUNT 400
 #define PADDLE1_MOVE_RANGE 6
 #define PADDLE2_MOVE_RANGE 25
+#define PADDLE_LENGTH 5
+#define HALF_PADDLE_LENGTH EVPY(PADDLE_LENGTH / 2)
 
 VAR pos_x
 VAR pos_y
@@ -48,11 +50,11 @@ MOVWF pos_x_y
 IGDRAWPF pos_x_y
 
 // pack paddle1 args
-MOVLW EVPY(5 << 12)
+MOVLW EVPY(PADDLE_LENGTH << 12)
 MOVWF paddle1_line
 MOVFW paddle1_pos_x
-// sub 2 because x is middle of paddle
-SUBWL,w 2
+// sub half paddle length because x is middle of paddle
+SUBWL,w HALF_PADDLE_LENGTH
 ROLWL,w 6
 ORWF,f paddle1_line
 
@@ -60,11 +62,11 @@ ORWF,f paddle1_line
 IGDRAWHF paddle1_line
 
 // pack paddle2 args
-MOVLW EVPY((5 << 12) | 31)
+MOVLW EVPY((PADDLE_LENGTH << 12) | 31)
 MOVWF paddle2_line
 MOVFW paddle2_pos_x
-// sub 2 because x is middle of paddle
-SUBWL,w 2
+// sub half paddle length because x is middle of paddle
+SUBWL,w HALF_PADDLE_LENGTH
 ROLWL,w 6
 ORWF,f paddle2_line
 
@@ -99,8 +101,8 @@ EQWL,8 1
 //now check if paddle1 is under
 MOVFW pos_x
 SUBWF,w paddle1_pos_x
-ADDWL,w 2 //half of paddle length
-GRTWL,0 4 //check if right side of paddle
+ADDWL,w HALF_PADDLE_LENGTH //half of paddle length
+GRTWL,0 EVPY(PADDLE_LENGTH - 1) //check if right side of paddle
 GOTO SKIP_P1_BOUNCE
 LESSWL,0 0 //check if left side of paddle
 GOTO SKIP_P1_BOUNCE
@@ -117,8 +119,8 @@ EQWL,8 30
 //now check if paddle1 is under
 MOVFW pos_x
 SUBWF,w paddle2_pos_x
-ADDWL,w 2 //half of paddle length
-GRTWL,0 4 //check if right side of paddle
+ADDWL,w HALF_PADDLE_LENGTH //half of paddle length
+GRTWL,0 EVPY(PADDLE_LENGTH - 1) //check if right side of paddle
 GOTO SKIP_P2_BOUNCE
 LESSWL,0 0 //check if left side of paddle
 GOTO SKIP_P2_BOUNCE
