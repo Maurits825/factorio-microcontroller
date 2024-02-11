@@ -20,7 +20,7 @@ class IGPUSim:
         print("\nCreating gif ...")
         size = 4
 
-        with imageio.get_writer("screen.gif", mode='I', duration=10) as writer:
+        with imageio.get_writer("screen.gif", mode='I', duration=15) as writer:
             for i, state in enumerate(self.igpu_states):
                 # TODO make a input arg?
                 if i % 10 != 0 and i != len(self.igpu_states) - 1:

@@ -12,7 +12,7 @@ from simulator.instruction_decoder import InstructionDecoder
 from simulator.instruction_executor import InstructionExecutor
 from simulator.microcontroller_state import MicrocontrollerState
 
-CPU_BASE_SPEED = 0.375
+CPU_CLOCK_PERIOD = 0.4/0.6
 CYCLE_TIMEOUT = 50_000
 
 
@@ -70,7 +70,7 @@ class FactorioMicrocontrollerSim:
 
             if is_halt:
                 print("\nHalted after " + str(cycle_count) + " cycles.")
-                print("Would take " + str(round(cycle_count / (CPU_BASE_SPEED * 64))) + " seconds to complete.")
+                print("Would take " + str(round((cycle_count * CPU_CLOCK_PERIOD * 2) / 64)) + " seconds to complete.")
                 return microcontroller_state
 
     def get_assembly_line_and_scope(self, microcontroller_state: MicrocontrollerState) -> (list[str], AssemblyLine):

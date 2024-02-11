@@ -25,13 +25,13 @@ class Program2ROM:
         self.signal_map_max = len(self.signal_map)
 
     def load_blueprint_strings(self):
-        json_file = '../resources/blueprint_strings.json'
+        json_file = '../../resources/blueprint_strings.json'
         with open(json_file) as f:
             blueprint_json = json.load(f)
         return blueprint_json
 
     def load_signal_map(self):
-        json_file = "../resources/signal_map.json"
+        json_file = "../../resources/signal_map.json"
         with open(json_file) as f:
             signal_map = json.load(f)
         return signal_map
