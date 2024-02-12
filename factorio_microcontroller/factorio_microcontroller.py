@@ -15,7 +15,7 @@ def main(assembly, clipboard):
 
     binary2rom = Program2ROM()
     program = binary2rom.convert_file_to_base10_list(binary_file)
-    program_rom_blueprint = binary2rom.convert_program_to_rom(program)
+    program_rom_blueprint = binary2rom.get_rom_blueprint(program)
     if clipboard:
         pyperclip.copy(program_rom_blueprint)
         print('Program blueprint copied to clipboard')

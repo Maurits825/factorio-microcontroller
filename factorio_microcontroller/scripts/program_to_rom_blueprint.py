@@ -2,17 +2,24 @@ import zlib
 import json
 import copy
 from base64 import b64decode, b64encode
+from pathlib import Path
+
 import click
 import pyperclip
 
-max_signal_per_comb = 20
-bits = 32
+RESOURCE_FOLDER = Path(__file__).parent.parent.parent / "resources"
+
+MAX_CONSTANT_COMB_SIGNALS = 20
+BITS = 32
 
 
 class Program2ROM:
     def __init__(self):
-        blueprint_string = self.load_blueprint_strings()
-        constant_comb_blueprint = blueprint_string['constant_combinator']
+        self.blueprint_strings = self.load_json(RESOURCE_FOLDER / "blueprint_strings.json")
+        self.signal_map = self.load_json(RESOURCE_FOLDER / "signal_map.json")
+        self.signal_map_max = len(self.signal_map)
+
+        constant_comb_blueprint = self.blueprint_strings['constant_combinator']
 
         self.rom_blueprint_template = self.decode_blueprint(constant_comb_blueprint)
         self.constant_comb_entity_template = copy.deepcopy(self.rom_blueprint_template['blueprint']['entities'][0])
@@ -21,28 +28,18 @@ class Program2ROM:
         self.rom_blueprint_template['blueprint']['entities'].clear()
         self.constant_comb_entity_template['control_behavior']['filters'].clear()
 
-        self.signal_map = self.load_signal_map()
-        self.signal_map_max = len(self.signal_map)
-
-    def load_blueprint_strings(self):
-        json_file = '../../resources/blueprint_strings.json'
+    def load_json(self, json_file):
         with open(json_file) as f:
-            blueprint_json = json.load(f)
-        return blueprint_json
-
-    def load_signal_map(self):
-        json_file = "../../resources/signal_map.json"
-        with open(json_file) as f:
-            signal_map = json.load(f)
-        return signal_map
+            json_dict = json.load(f)
+        return json_dict
 
     def convert_file_to_base10_list(self, file_name):
         program = []
         with open(file_name) as file:
             for line in file:
                 decimal_value = int(line, 2)
-                if (decimal_value & (1 << (bits - 1))) != 0:
-                    decimal_value = decimal_value - (1 << bits)
+                if (decimal_value & (1 << (BITS - 1))) != 0:
+                    decimal_value = decimal_value - (1 << BITS)
                 program.append(decimal_value)
 
         return program
@@ -55,50 +52,53 @@ class Program2ROM:
         data = json.dumps(blueprint_dict).encode('utf-8')
         return '0' + b64encode(zlib.compress(data)).decode('ascii')
 
-    #TODO handle program length > self.signal_map_max (137)
-    def convert_program_to_rom(self, program_base10):
-        #program_split = [program_base10[i:i + self.signal_map_max] for i in range(0, len(program_base10), self.signal_map_max)]
+    def get_rom_blueprint(self, decimal_program) -> str:
+        program_split = [decimal_program[i:i + self.signal_map_max]
+                         for i in range(0, len(decimal_program), self.signal_map_max)]
 
-        constant_comb_idx = -1
-        signal_comb_idx = max_signal_per_comb + 1
-        rom_blueprint = copy.deepcopy(self.rom_blueprint_template)
-        for line_num, instruction in enumerate(program_base10):
-            if signal_comb_idx > max_signal_per_comb:
-                rom_blueprint['blueprint']['entities'].append(copy.deepcopy(self.constant_comb_entity_template))
+        rom_blueprint = self.decode_blueprint(self.blueprint_strings["rom_template"])
+        rom_blueprint["blueprint"]["entities"].clear()
 
-                signal_comb_idx = 1
-                constant_comb_idx += 1
-
-                rom_blueprint['blueprint']['entities'][constant_comb_idx]['position'] = {'x': 0, 'y': constant_comb_idx}
-                rom_blueprint['blueprint']['entities'][constant_comb_idx]['entity_number'] = constant_comb_idx + 1
-
-            signal = copy.deepcopy(self.signal_template)
-            signal['signal']['type'] = self.signal_map[line_num]['type']
-            signal['signal']['name'] = self.signal_map[line_num]['name']
-            signal['count'] = instruction
-            signal['index'] = signal_comb_idx
-            rom_blueprint['blueprint']['entities'][constant_comb_idx]['control_behavior']['filters'].append(signal)
-
-            signal_comb_idx += 1
-
-        comb_count = len(rom_blueprint['blueprint']['entities'])
-        for idx, combinator in enumerate(rom_blueprint['blueprint']['entities']):
-            if idx == 0:
-                combinator['connections'] = {'1': {'green': [{'entity_id': 2}]}}
-            elif idx == comb_count-1:
-                combinator['connections'] = {'1': {'green': [{'entity_id': idx}]}}
-            else:
-                combinator['connections'] = {'1': {'green': [{'entity_id': idx}, {'entity_id': idx+2}]}}
+        for i, decimal_lines in enumerate(program_split):
+            rom_entities = self.get_rom_entities(decimal_lines)
+            self.update_entities(rom_entities, i)
+            rom_blueprint["blueprint"]["entities"] += rom_entities
 
         return self.encode_dict(rom_blueprint)
 
+    def update_entities(self, entities, offset):
+        id_offset = offset * len(entities)
+        for entity in entities:
+            entity["position"]["x"] -= offset
+            entity["entity_number"] += id_offset
+
+            for _, connection in entity["connections"].items():
+                for __, color in connection.items():
+                    for number in color:
+                        number["entity_id"] += id_offset
+
+    def get_rom_entities(self, decimal_lines) -> list:
+        rom_map_entities = self.decode_blueprint(self.blueprint_strings["rom_template"])["blueprint"]["entities"]
+        for entity in rom_map_entities[:-1]:
+            entity['control_behavior']['filters'].clear()
+
+        for i, line in enumerate(decimal_lines):
+            signal = copy.deepcopy(self.signal_template)
+            signal['signal']['type'] = self.signal_map[i]['type']
+            signal['signal']['name'] = self.signal_map[i]['name']
+            signal['count'] = line
+            signal['index'] = (i % MAX_CONSTANT_COMB_SIGNALS) + 1
+            rom_map_entities[i // MAX_CONSTANT_COMB_SIGNALS]['control_behavior']['filters'].append(signal)
+
+        return rom_map_entities
+
     def create_rom_map_blueprint(self):
         constant_comb_idx = -1
-        signal_comb_idx = max_signal_per_comb + 1
+        signal_comb_idx = MAX_CONSTANT_COMB_SIGNALS + 1
         rom_map = copy.deepcopy(self.rom_blueprint_template)
         rom_map['blueprint']['label'] = 'Rom Map'
         for signal_map_idx, signal in enumerate(self.signal_map):
-            if signal_comb_idx > max_signal_per_comb:
+            if signal_comb_idx > MAX_CONSTANT_COMB_SIGNALS:
                 rom_map['blueprint']['entities'].append(copy.deepcopy(self.constant_comb_entity_template))
 
                 signal_comb_idx = 1
@@ -133,7 +133,7 @@ def main(bin_file, rom_map, clipboard):
             print(rom_map_blueprint)
     elif bin_file:
         program = binary2rom.convert_file_to_base10_list(bin_file)
-        program_rom_blueprint = binary2rom.convert_program_to_rom(program)
+        program_rom_blueprint = binary2rom.get_rom_blueprint(program)
         if clipboard:
             pyperclip.copy(program_rom_blueprint)
             print('Program blueprint copied to clipboard')
