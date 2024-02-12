@@ -10,7 +10,7 @@ Screenshot of the microcontroller showing each part.
 ## Getting Started
 
 ### Compile a Program
-The assembly programs have to be written using the [Factorio Assembly language](https://github.com/Maurits825/factorio-microcontroller/wiki/Factorio-Assembly-Language).
+The assembly programs have to be written using this [Assembly language](https://github.com/Maurits825/factorio-microcontroller/wiki/Assembly-Language).
 
 Run the `setup.sh` script only once to create the virtual environment and download the dependencies.
 
