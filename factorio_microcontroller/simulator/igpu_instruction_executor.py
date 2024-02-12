@@ -31,7 +31,7 @@ class IGPUInstructionExecutor:
         elif 'IGDRAWP' in opcode:
             active_buffer[input_args.x] = active_buffer[input_args.x] | (1 << input_args.y)
         elif 'IGDRAWR' in opcode:
-            for x in range(input_args.x, input_args.a):  # TODO +1 here because range stop is exclusive?
+            for x in range(input_args.x, input_args.a + 1):
                 active_buffer[x] = active_buffer[x] | ((1 << (input_args.b + 1)) - (1 << input_args.y))
         elif 'IGDRAWH' in opcode:
             for x in range(input_args.x, input_args.x + input_args.b):
