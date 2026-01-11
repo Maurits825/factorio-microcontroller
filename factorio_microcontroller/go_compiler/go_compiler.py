@@ -1,13 +1,14 @@
 import click
 
 from compiler.assembly_compiler import AssemblyCompiler
-from parser import Parser
 from lexer import Lexer
+from parser import Parser
 
 
 @click.command()
 @click.option('--file', '-f', help='Name of the file')
 def main(file):
+    # TODO have another fn or class to handle the steps?
     lexer = Lexer()
     tokens = lexer.run(file)
 

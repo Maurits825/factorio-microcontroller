@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from lexer import Token
-from lexer import TokenType
+# TODO figure out proper imports
+from .lexer import Token
+from .lexer import TokenType
 
 
 @dataclass
@@ -49,6 +50,12 @@ class Parser:
                     # todo handle input args, well just one
 
                     t = tokens[i + 3]
+                    if t.type == TokenType.IDENTIFIER:
+                        self.assembly_lines.append("VAR " + t.value)
+                        self.assembly_lines.append("MOVWF " + t.value)
+                        i += 1
+
+                    t = tokens[i + 3]
                     if not (t.type == TokenType.SCOPE and t.value == ")"):
                         raise Exception("Expected arg list end")
 
@@ -82,8 +89,10 @@ class Parser:
                         self.assembly_lines.append("MOVWF " + id_name)
                         i += 3
                     elif next_t.type == TokenType.SCOPE and next_t.value == "(":
-                        if tokens[i + 2].type != TokenType.SCOPE:
-                            raise NotImplemented  # input args
+                        t = tokens[i + 2]
+                        if t.type != TokenType.SCOPE:  # TODO assume its id, could also be literal
+                            self.assembly_lines.append("MOVFW " + t.value)
+                            i += 1
                         self.assembly_lines.append("CALL " + id_name)
                         i += 3
 

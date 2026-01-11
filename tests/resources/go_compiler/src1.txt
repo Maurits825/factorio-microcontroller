@@ -1,0 +1,11 @@
+//skip package stuff for now
+
+func main() {
+    for i := range 10 {
+        writeOut(i)
+    }
+}
+
+func writeOut(v) {
+    asm("WOUTF,2 v")
+}

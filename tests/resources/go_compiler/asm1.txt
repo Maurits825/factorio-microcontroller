@@ -1,0 +1,20 @@
+CALL main
+FN main
+VAR i
+MOVLW 0
+MOVWF i
+LABEL loop1
+MOVFW i
+CALL writeOut
+INCRF i
+MOVLW 10
+GRTWF,0 i
+GOTO loop1
+RET
+END
+FN writeOut
+VAR v
+MOVWF v
+WOUTF,2 v
+RET
+END
