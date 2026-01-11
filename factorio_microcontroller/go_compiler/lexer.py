@@ -59,9 +59,10 @@ class Lexer:
                 self.process_c(c1, c2)
                 c1 = c2
 
-        print("Done")
         for t in self.tokens:
             print(str(t.type) + ": " + t.value)
+
+        return self.tokens
 
     def process_c(self, c1, c2):
         match self.state:

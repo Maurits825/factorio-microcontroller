@@ -1,12 +1,11 @@
 //skip package stuff for now
 
 func main() {
-    myVar := 5
     for i := range 10 {
-        asm("WOUTF,2 i") //how will var i work here???
+        writeOut(i)
     }
 }
 
-func testOutput() {
-    value := 7
+func writeOut(v) {
+    asm("WOUTF,2 v")
 }
