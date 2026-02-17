@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 
 # TODO figure out proper imports
-from .lexer import Token
-from .lexer import TokenType
+from lexer import Token
+from lexer import TokenType
 
 
 @dataclass
@@ -16,6 +18,23 @@ class ForLoop:
 class ScopeType(Enum):
     FOR = 0
     FUNCTION = 1
+
+
+@dataclass
+class OperationNode:
+    operand1: Token | 'OperationNode' | None
+    operand2: Token | 'OperationNode' | None
+    operator: str
+    parent: 'OperationNode' | None
+
+
+class OperationTreeState(Enum):
+    OPERAND1 = 0
+    OPERAND2 = 1
+    OPERATOR = 2
+
+
+OPERATORS = {"*": 0, "/": 0, "+": 1, "-": 1}
 
 
 class Parser:
@@ -35,6 +54,8 @@ class Parser:
         while i < len(tokens):
             t = tokens[i]
             match t.type:
+                case TokenType.NEW_LINE:
+                    i += 1
                 case TokenType.FUNCTION:
                     name_token = tokens[i + 1]
                     if tokens[i + 1].type != TokenType.IDENTIFIER:
@@ -80,6 +101,7 @@ class Parser:
                     next_t = tokens[i + 1]
                     # TODO checking tokens, maybe add a fn
                     if next_t.type == TokenType.DEFINE and next_t.value == ":=":
+                        nodes = self.unravel(tokens, i + 2)
                         literal = tokens[i + 2]
                         if literal.type != TokenType.INT_LITERAL:
                             raise Exception("Expected literal")
@@ -147,3 +169,81 @@ class Parser:
             print(line)
 
         return self.assembly_lines
+
+    def unravel(self, tokens: list[Token], start: int):
+        i = start
+        state = OperationTreeState.OPERAND1
+        working_node = OperationNode(None, None, "", None)
+        last_op = 0
+
+        root_node = working_node
+        last_node = None
+
+        while i < len(tokens):
+            t = tokens[i]
+
+            if t.type == TokenType.NEW_LINE:
+                break
+
+            match state:
+                case OperationTreeState.OPERAND1:
+                    if t.type == TokenType.INT_LITERAL:
+                        working_node.operand1 = t
+                    elif t.type == TokenType.IDENTIFIER:
+                        if tokens[i + 1].is_equal(TokenType.SCOPE, "("):
+                            raise NotImplemented("TODO")
+                        else:
+                            working_node.operand1 = t
+                    else:
+                        raise Exception("Unexpected token in unravel: " + str(t))
+                    state = OperationTreeState.OPERATOR
+
+                case OperationTreeState.OPERAND2:
+                    if t.type == TokenType.INT_LITERAL:
+                        working_node.operand2 = t
+                    elif t.type == TokenType.IDENTIFIER:
+                        if tokens[i + 1].is_equal(TokenType.SCOPE, "("):
+                            raise NotImplemented("TODO")
+                        else:
+                            working_node.operand2 = t
+                    else:
+                        raise Exception("Unexpected token in unravel: " + str(t))
+
+                    last_node = working_node
+                    working_node = OperationNode(None, None, "", None)
+                    state = OperationTreeState.OPERATOR
+
+                case OperationTreeState.OPERATOR:
+                    # turn "-" to "+ -1 *", kinda hacky TODO not needed!!
+                    # if t.is_equal(TokenType.OPERATOR, "-"):
+                    #     t.value = "+"
+                    #     tokens.insert(i + 1, Token(TokenType.INT_LITERAL, "-1"))
+                    #     tokens.insert(i + 2, Token(TokenType.OPERATOR, "*"))
+                    #     continue
+
+                    current_op = OPERATORS[t.value]
+                    if current_op < last_op:
+                        working_node.operand1 = last_node.operand2
+                        last_node.operand2 = working_node
+                        working_node.parent = last_node
+                    elif not working_node.operand1:
+                        if current_op == last_op:
+                            working_node.operand1 = last_node
+                            if not last_node.parent:
+                                root_node = working_node
+                                working_node.parent = None
+                            else:
+                                last_node.parent.operand2 = working_node  # TODO this is sometimes op1??
+                                working_node.parent = last_node.parent
+                        else:
+                            working_node.operand1 = root_node
+                            # working_node.operand1.parent = root_node # todo we dont need this?
+                            root_node = working_node
+
+                    working_node.operator = t.value
+                    last_op = OPERATORS[t.value]
+                    state = OperationTreeState.OPERAND2
+
+            i += 1
+
+        return root_node

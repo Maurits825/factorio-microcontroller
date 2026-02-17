@@ -6,7 +6,6 @@ class LexerState(Enum):
     READING = 0
     COMMENT = 1
     FUNCTION = 2
-    OPERATOR = 3
     IDENTIFIER = 4
     SKIP = 5
     INT_LITERAL = 6
@@ -27,6 +26,8 @@ class TokenType(Enum):
     SCOPE = 4
     INT_LITERAL = 5
     STR_LITERAL = 6
+    OPERATOR = 7
+    NEW_LINE = 8
 
 
 # TODO also meta data? line number and stuff
@@ -34,6 +35,9 @@ class TokenType(Enum):
 class Token:
     type: TokenType
     value: str
+
+    def is_equal(self, t_type, value):
+        return self.type == t_type and self.value == value
 
 
 class Lexer:
@@ -45,9 +49,7 @@ class Lexer:
     # the point of this lexer is to output some list of tokens
     # maybe grouped by function also or scopes like for loops??
     def run(self, filename):
-        self.state = LexerState.READING
-        self.token_value = ""
-        self.tokens = []
+        self.__init__()
 
         print("reading: " + filename)
 
@@ -64,6 +66,20 @@ class Lexer:
 
         return self.tokens
 
+    def tokenize_str(self, s: str):
+        self.__init__()
+
+        # s += "\n"
+
+        i = 0
+        while i < len(s) - 1:
+            c1 = s[i]
+            c2 = s[i + 1]
+            self.process_c(c1, c2)
+            i += 1
+
+        return self.tokens
+
     def process_c(self, c1, c2):
         match self.state:
             case LexerState.SKIP:
@@ -73,6 +89,9 @@ class Lexer:
             case LexerState.READING:
                 if c1 == " ":
                     return
+
+                if c1 == "\n":
+                    self.tokens.append(Token(TokenType.NEW_LINE, "\\n"))
 
                 elif c1 == "/" and c2 == "/":
                     self.state = LexerState.COMMENT
@@ -94,6 +113,11 @@ class Lexer:
 
                 elif c1 == "\"":
                     self.state = LexerState.STR_LITERAL
+
+                elif c1 in ["+", "-", "*", "/"]:
+                    self.tokens.append(Token(TokenType.OPERATOR, c1))
+                else:
+                    raise ValueError("Unknow char: " + c1)
 
             case LexerState.COMMENT:
                 if c1 == "\n":
