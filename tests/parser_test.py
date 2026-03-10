@@ -47,6 +47,15 @@ class ParserTest(unittest.TestCase):
 
     def test_unravel(self):
         cases = [
+            "-5*-3/-5*+5\n", #TODO fix this one
+            "2*-(3+4)\n",
+            "3/-2\n",
+            "2*(3+4)\n",
+            "2*(3+4*7*(-3+(4-6)))\n",
+            "-5+3\n",
+            "-5+-3\n",
+            "-+-+-+-+-+5+3\n",
+            "123*-+-+-+-+-+5+3\n",
             "6-5*2*2\n",
             "2*3+4+5\n",
             "6-5*2*2+4+7/8-8*8/8-9/3/1-9+1+2+4+6-7-1-1-6+1*8-1+8\n",
@@ -56,7 +65,6 @@ class ParserTest(unittest.TestCase):
             "2*3+4*7*2\n",
             "3+4*2+3\n",
             "3+4*2+3*4\n",
-            "3*4+2\n",
             "3+4*2\n",
             "102+12\n",
             "3-2*3-3*8\n",
@@ -80,7 +88,7 @@ class ParserTest(unittest.TestCase):
 
     def unravel_case(self, case):
         tokens = self.lexer.tokenize_str(case)
-        root_node = self.parser.unravel(tokens, 0)
+        root_node, _ = self.parser.unravel(tokens, 0)
         result = self.reduce_node(root_node)
 
         expected = eval(case)

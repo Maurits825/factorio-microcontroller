@@ -170,7 +170,8 @@ class Parser:
 
         return self.assembly_lines
 
-    def unravel(self, tokens: list[Token], start: int):
+    # todo maybe store i as state in parser or another class?
+    def unravel(self, tokens: list[Token], start: int,  break_on=TokenType.NEW_LINE) -> (OperationNode, int):
         i = start
         state = OperationTreeState.OPERAND1
         working_node = OperationNode(None, None, "", None)
@@ -182,16 +183,29 @@ class Parser:
         while i < len(tokens):
             t = tokens[i]
 
-            if t.type == TokenType.NEW_LINE:
+            if t.type == TokenType.NEW_LINE == break_on:
                 break
+            if t.is_equal(TokenType.SCOPE, ")") and t.type == break_on:
+                break
+            if (t.type == TokenType.NEW_LINE or t.is_equal(TokenType.SCOPE, ")")) and t.value != break_on:
+                raise Exception("Unexpected new line or scope: " + str(t))
 
             match state:
                 case OperationTreeState.OPERAND1:
                     if t.type == TokenType.INT_LITERAL:
                         working_node.operand1 = t
+                    elif t.is_equal(TokenType.OPERATOR, "-") or t.is_equal(TokenType.OPERATOR, "+"):
+                        is_negative, i = self.handle_unary_op(tokens, i)
+                        if is_negative:
+                            working_node.operand1 = Token(TokenType.INT_LITERAL, "-1")
+                            working_node.operator = "*"
+                            state = OperationTreeState.OPERAND2
+                            continue
+                    elif t.is_equal(TokenType.SCOPE, "("):
+                        working_node.operand1, i = self.unravel(tokens, i+1, TokenType.SCOPE)
                     elif t.type == TokenType.IDENTIFIER:
                         if tokens[i + 1].is_equal(TokenType.SCOPE, "("):
-                            raise NotImplemented("TODO")
+                            raise Exception("TODO")
                         else:
                             working_node.operand1 = t
                     else:
@@ -201,6 +215,25 @@ class Parser:
                 case OperationTreeState.OPERAND2:
                     if t.type == TokenType.INT_LITERAL:
                         working_node.operand2 = t
+                    elif t.is_equal(TokenType.OPERATOR, "-") or t.is_equal(TokenType.OPERATOR, "+"):
+                        is_negative, i = self.handle_unary_op(tokens, i)
+                        if is_negative:
+                            if last_node:
+                                last_node.operand2 = working_node
+                            else:
+                                root_node.operand2 = working_node
+                            working_node = OperationNode(None, None, "", None)
+                            working_node.operand1 = Token(TokenType.INT_LITERAL, "-1")
+                            working_node.operator = "*"
+
+                            if last_node:
+                                last_node.operand2.operand2 = working_node
+                            else:
+                                root_node.operand2.operand2 = working_node
+                            continue
+
+                    elif t.is_equal(TokenType.SCOPE, "("):
+                        working_node.operand2, i = self.unravel(tokens, i+1, TokenType.SCOPE)
                     elif t.type == TokenType.IDENTIFIER:
                         if tokens[i + 1].is_equal(TokenType.SCOPE, "("):
                             raise NotImplemented("TODO")
@@ -214,13 +247,6 @@ class Parser:
                     state = OperationTreeState.OPERATOR
 
                 case OperationTreeState.OPERATOR:
-                    # turn "-" to "+ -1 *", kinda hacky TODO not needed!!
-                    # if t.is_equal(TokenType.OPERATOR, "-"):
-                    #     t.value = "+"
-                    #     tokens.insert(i + 1, Token(TokenType.INT_LITERAL, "-1"))
-                    #     tokens.insert(i + 2, Token(TokenType.OPERATOR, "*"))
-                    #     continue
-
                     current_op = OPERATORS[t.value]
                     if current_op < last_op:
                         working_node.operand1 = last_node.operand2
@@ -233,7 +259,7 @@ class Parser:
                                 root_node = working_node
                                 working_node.parent = None
                             else:
-                                last_node.parent.operand2 = working_node  # TODO this is sometimes op1??
+                                last_node.parent.operand2 = working_node
                                 working_node.parent = last_node.parent
                         else:
                             working_node.operand1 = root_node
@@ -246,4 +272,20 @@ class Parser:
 
             i += 1
 
-        return root_node
+        return root_node, i
+
+    def handle_unary_op(self, tokens: list[Token], start: int) -> (bool, int):
+        is_negative = tokens[start].is_equal(TokenType.OPERATOR, "-")
+
+        i = start + 1
+        while i < len(tokens):
+            t = tokens[i]
+            if not t.is_equal(TokenType.OPERATOR, "-") and not t.is_equal(TokenType.OPERATOR, "+"):
+                break
+
+            if t.is_equal(TokenType.OPERATOR, "-"):
+                is_negative = not is_negative
+
+            i += 1
+
+        return is_negative, i
