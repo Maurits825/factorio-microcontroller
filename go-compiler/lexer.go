@@ -35,6 +35,16 @@ const (
 	tokenComma
 	tokenColon
 	tokenPeriod
+	tokenAmpersand
+
+	tokenIf
+	tokenElse
+	tokenRange
+	tokenFunc
+	tokenReturn
+	tokenPackage
+	tokenSwitch
+	tokenCase
 )
 
 var tokenTypeName = map[tokenType]string{
@@ -51,6 +61,33 @@ var tokenTypeName = map[tokenType]string{
 	tokenPeriod:             "Period",
 	tokenLogicalOperator:    "Logical op",
 	tokenComparisonOperator: "Comparison op",
+	tokenAmpersand:          "Ampersand",
+
+	tokenIf:      "If",
+	tokenElse:    "Else",
+	tokenRange:   "Range",
+	tokenFunc:    "Function",
+	tokenReturn:  "Return",
+	tokenPackage: "Package",
+	tokenSwitch:  "Switch",
+	tokenCase:    "Case",
+}
+
+var reseverdIdentifiers = map[string]tokenType{
+	"if":      tokenIf,
+	"else":    tokenElse,
+	"range":   tokenRange,
+	"func":    tokenFunc,
+	"return":  tokenReturn,
+	"package": tokenPackage,
+	"switch":  tokenSwitch,
+	"case":    tokenCase,
+}
+
+type statement struct {
+	tokens     []token
+	lineNumber int
+	rawLine    string
 }
 
 type token struct {
@@ -59,19 +96,22 @@ type token struct {
 }
 
 type lexer struct {
-	reader       *bufio.Reader
-	state        lexerState
-	tokens       []token
-	currentValue string
-	lineNumber   int
+	reader           *bufio.Reader
+	state            lexerState
+	currentStatement *statement
+	statements       []statement
+	currentValue     string
+	lineNumber       int
 }
 
-func runLexer(reader *bufio.Reader) []token {
+func runLexer(reader *bufio.Reader) []statement {
 	l := lexer{
-		reader: reader,
-		state:  lexerStateReading,
-		tokens: []token{},
+		reader:     reader,
+		state:      lexerStateReading,
+		statements: []statement{{tokens: []token{}, lineNumber: 1}},
+		lineNumber: 1,
 	}
+	l.currentStatement = &l.statements[0]
 
 	for {
 		c, err := l.readChar()
@@ -82,18 +122,16 @@ func runLexer(reader *bufio.Reader) []token {
 		}
 	}
 
-	return l.tokens
+	if len(l.statements[len(l.statements)-1].tokens) == 0 {
+		l.statements = l.statements[:len(l.statements)-1]
+	}
+
+	return l.statements
 }
 
 func printTokens(tokens []token) {
-	fmt.Printf("Line 1: ")
-	lineNumber := 1
 	for _, t := range tokens {
 		fmt.Printf("%v(%q) ", tokenTypeName[t.tokenType], t.value)
-		if t.tokenType == tokenNewLine {
-			lineNumber += 1
-			fmt.Printf("\nLine %v: ", lineNumber)
-		}
 	}
 	fmt.Println()
 }
@@ -108,7 +146,10 @@ func (l *lexer) readChar() (string, error) {
 		panic(err)
 	}
 
-	return string(r), nil
+	c := string(r)
+	l.currentStatement.rawLine += c
+
+	return c, nil
 }
 
 func (l *lexer) PeekChar() string {
@@ -144,10 +185,6 @@ func isAnyString(vs []string) func(c string) bool {
 
 var singleCharMatchers = []stringMatcher{
 	{
-		condition: isString("\n"),
-		tokenType: tokenNewLine,
-	},
-	{
 		condition: isString(","),
 		tokenType: tokenComma,
 	},
@@ -158,6 +195,10 @@ var singleCharMatchers = []stringMatcher{
 	{
 		condition: isString(":"),
 		tokenType: tokenColon,
+	},
+	{
+		condition: isString("&"),
+		tokenType: tokenAmpersand,
 	},
 	{
 		condition: isAnyString([]string{"+", "-", "*", "/", "=", "!"}),
@@ -189,8 +230,8 @@ var doubleCharMatchers = []stringMatcher{
 }
 
 func (l *lexer) proccessChar(c1 string) {
-	//TODO meta data line number and such?
 	c2 := l.PeekChar()
+
 	switch l.state {
 	case lexerStateSkip:
 		l.state = lexerStateReading
@@ -200,14 +241,18 @@ func (l *lexer) proccessChar(c1 string) {
 		}
 		//TODO maybe can have a more generic way for this? like a dict or something, at least for the basic comma,colon,ops...
 		if c1 == "\n" {
-			l.tokens = append(l.tokens, token{tokenType: tokenNewLine, value: c1})
 			l.lineNumber += 1
+			if len(l.currentStatement.tokens) > 0 {
+				l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: tokenNewLine, value: c1})
+				l.statements = append(l.statements, statement{tokens: []token{}, lineNumber: l.lineNumber})
+				l.currentStatement = &l.statements[len(l.statements)-1]
+			}
 		} else if c1 == "/" && c2 == "/" {
 			l.state = lexerStateComment
 		} else if unicode.IsNumber(rune(c1[0])) {
 			l.state = lexerStateIntLiteral
 			l.proccessChar(c1)
-		} else if unicode.IsLetter(rune(c1[0])) || c1 == "_" { //TODO extend, like _foo := 3
+		} else if unicode.IsLetter(rune(c1[0])) || c1 == "_" { //TODO this catches all valid var names?
 			l.state = lexerStateIdentifier
 			l.proccessChar(c1)
 		} else if c1 == "\"" {
@@ -218,34 +263,39 @@ func (l *lexer) proccessChar(c1 string) {
 			doubleChar := c1 + c2
 			for _, m := range doubleCharMatchers {
 				if m.condition(doubleChar) {
-					l.tokens = append(l.tokens, token{tokenType: m.tokenType, value: doubleChar})
+					l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: m.tokenType, value: doubleChar})
 					l.state = lexerStateSkip
 					return
 				}
 			}
 			for _, m := range singleCharMatchers {
 				if m.condition(c1) {
-					l.tokens = append(l.tokens, token{tokenType: m.tokenType, value: c1})
+					l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: m.tokenType, value: c1})
 					return
 				}
 			}
-			err := fmt.Sprintf("unknown char: %v %v, line: %d", c1, c2, l.lineNumber)
-			fmt.Println(err)
-			l.tokens = append(l.tokens, token{tokenType: tokenUnknown, value: c1})
+			err := fmt.Sprintf("Error: unexpect char %q\n", c1)
+			fmt.Print(err)
+			fmt.Printf("Line %d: %q\n", l.lineNumber, l.currentStatement.rawLine)
+			panic(err)
+			// l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: tokenUnknown, value: c1})
 		}
 
 	case lexerStateComment:
 		if c1 == "\n" {
-			l.tokens = append(l.tokens, token{tokenType: tokenNewLine, value: c1})
 			l.state = lexerStateReading
-			l.lineNumber += 1
+			l.proccessChar(c1)
 		}
 
 	//TODO dupe code, improve?
 	case lexerStateIdentifier:
 		l.currentValue += c1
 		if !isAlphaNum(c2) {
-			l.tokens = append(l.tokens, token{tokenType: tokenIdentifier, value: l.currentValue})
+			t, exists := reseverdIdentifiers[l.currentValue]
+			if !exists {
+				t = tokenIdentifier
+			}
+			l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: t, value: l.currentValue})
 			l.state = lexerStateReading
 			l.currentValue = ""
 		}
@@ -253,7 +303,7 @@ func (l *lexer) proccessChar(c1 string) {
 	case lexerStateIntLiteral:
 		l.currentValue += c1
 		if !unicode.IsNumber(rune(c2[0])) {
-			l.tokens = append(l.tokens, token{tokenType: tokenIntLiteral, value: l.currentValue})
+			l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: tokenIntLiteral, value: l.currentValue})
 			l.state = lexerStateReading
 			l.currentValue = ""
 		}
@@ -267,12 +317,12 @@ func (l *lexer) proccessChar(c1 string) {
 			l.currentValue += c1
 			l.readChar()
 		} else if c1 == "\"" {
-			l.tokens = append(l.tokens, token{tokenType: tokenStrLiteral, value: l.currentValue})
+			l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: tokenStrLiteral, value: l.currentValue})
 			l.state = lexerStateSkip
 			l.currentValue = ""
 		} else if c2 == "\"" && c1 != "\\" {
 			l.currentValue += c1
-			l.tokens = append(l.tokens, token{tokenType: tokenStrLiteral, value: l.currentValue})
+			l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: tokenStrLiteral, value: l.currentValue})
 			l.state = lexerStateSkip
 			l.currentValue = ""
 		} else if c1 != "\"" {

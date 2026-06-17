@@ -20,7 +20,19 @@ func main() {
 
 	reader := bufio.NewReader(file)
 
-	tokens := runLexer(reader)
-	fmt.Printf("Total tokens: %d\n", len(tokens))
-	printTokens(tokens)
+	statements := runLexer(reader)
+	// printStatements(statements)
+	functions := runParser(statements)
+	println("Functions:")
+	println(functions)
+}
+
+func printStatements(statements []statement) {
+
+	for _, s := range statements {
+		fmt.Printf("\nLine %d\n", s.lineNumber)
+		fmt.Printf("Raw: %q\n", s.rawLine)
+		fmt.Print("Tokens: ")
+		printTokens(s.tokens)
+	}
 }

@@ -8,7 +8,8 @@ import (
 )
 
 func testToken(t *testing.T, s string, i int, expectedToken token) {
-	tokens := runLexer(bufio.NewReader(strings.NewReader(s)))
+	statements := runLexer(bufio.NewReader(strings.NewReader(s)))
+	tokens := statements[0].tokens
 	if len(tokens) <= i {
 		t.Errorf("FAIL: i=%d is outside of tokens size:%d", i, len(tokens))
 		t.Errorf("Expected token: %v", expectedToken)
