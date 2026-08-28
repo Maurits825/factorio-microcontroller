@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type parser struct {
 	statements []statement
@@ -78,8 +81,15 @@ func (p *parser) next() {
 
 func (p *parser) expect(ttype tokenType) *token {
 	if p.currentToken.tokenType != ttype {
-		err := fmt.Sprintf("Error: expected %v, got %v\nLine %d: %q",
-			tokenTypeName[ttype], tokenTypeName[p.currentToken.tokenType], p.currentStatement.lineNumber, p.currentStatement.rawLine)
+		lineNumber := fmt.Sprintf("Line %d: ", p.currentStatement.lineNumber)
+		offset := len(lineNumber)
+		tokenIndicator := strings.Repeat(" ", offset+p.currentToken.column)
+		tokenIndicator += "v"
+		err := fmt.Sprintf("Error: expected %v, got %v\n%s\n%s%q",
+			tokenTypeName[ttype], tokenTypeName[p.currentToken.tokenType],
+			tokenIndicator,
+			lineNumber,
+			p.currentStatement.rawLine)
 		panic(err)
 	}
 
@@ -94,6 +104,7 @@ func (p *parser) handleFuncDeclaration() {
 
 	args := []variable{}
 
+	//ptr receiver
 	p.expect(tokenBracket)
 	for {
 		if p.currentToken.tokenType == tokenBracket {

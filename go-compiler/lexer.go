@@ -93,6 +93,7 @@ type statement struct {
 type token struct {
 	tokenType tokenType
 	value     string
+	column    int
 }
 
 type lexer struct {
@@ -102,6 +103,7 @@ type lexer struct {
 	statements       []statement
 	currentValue     string
 	lineNumber       int
+	column           int
 }
 
 func runLexer(reader *bufio.Reader) []statement {
@@ -127,6 +129,7 @@ func runLexer(reader *bufio.Reader) []statement {
 	}
 
 	return l.statements
+
 }
 
 func printTokens(tokens []token) {
@@ -148,6 +151,7 @@ func (l *lexer) readChar() (string, error) {
 
 	c := string(r)
 	l.currentStatement.rawLine += c
+	l.column += 1
 
 	return c, nil
 }
@@ -242,10 +246,14 @@ func (l *lexer) proccessChar(c1 string) {
 		//TODO maybe can have a more generic way for this? like a dict or something, at least for the basic comma,colon,ops...
 		if c1 == "\n" {
 			l.lineNumber += 1
+			l.column = 0
 			if len(l.currentStatement.tokens) > 0 {
-				l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: tokenNewLine, value: c1})
+				l.addToken(tokenNewLine, c1)
 				l.statements = append(l.statements, statement{tokens: []token{}, lineNumber: l.lineNumber})
 				l.currentStatement = &l.statements[len(l.statements)-1]
+			} else {
+				l.currentStatement.lineNumber = l.lineNumber
+				l.currentStatement.rawLine = ""
 			}
 		} else if c1 == "/" && c2 == "/" {
 			l.state = lexerStateComment
@@ -263,14 +271,14 @@ func (l *lexer) proccessChar(c1 string) {
 			doubleChar := c1 + c2
 			for _, m := range doubleCharMatchers {
 				if m.condition(doubleChar) {
-					l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: m.tokenType, value: doubleChar})
+					l.addToken(m.tokenType, doubleChar)
 					l.state = lexerStateSkip
 					return
 				}
 			}
 			for _, m := range singleCharMatchers {
 				if m.condition(c1) {
-					l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: m.tokenType, value: c1})
+					l.addToken(m.tokenType, c1)
 					return
 				}
 			}
@@ -278,7 +286,6 @@ func (l *lexer) proccessChar(c1 string) {
 			fmt.Print(err)
 			fmt.Printf("Line %d: %q\n", l.lineNumber, l.currentStatement.rawLine)
 			panic(err)
-			// l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: tokenUnknown, value: c1})
 		}
 
 	case lexerStateComment:
@@ -295,7 +302,7 @@ func (l *lexer) proccessChar(c1 string) {
 			if !exists {
 				t = tokenIdentifier
 			}
-			l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: t, value: l.currentValue})
+			l.addToken(t, l.currentValue)
 			l.state = lexerStateReading
 			l.currentValue = ""
 		}
@@ -303,7 +310,7 @@ func (l *lexer) proccessChar(c1 string) {
 	case lexerStateIntLiteral:
 		l.currentValue += c1
 		if !unicode.IsNumber(rune(c2[0])) {
-			l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: tokenIntLiteral, value: l.currentValue})
+			l.addToken(tokenIntLiteral, l.currentValue)
 			l.state = lexerStateReading
 			l.currentValue = ""
 		}
@@ -317,18 +324,23 @@ func (l *lexer) proccessChar(c1 string) {
 			l.currentValue += c1
 			l.readChar()
 		} else if c1 == "\"" {
-			l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: tokenStrLiteral, value: l.currentValue})
+			l.addToken(tokenStrLiteral, l.currentValue)
 			l.state = lexerStateSkip
 			l.currentValue = ""
 		} else if c2 == "\"" && c1 != "\\" {
 			l.currentValue += c1
-			l.currentStatement.tokens = append(l.currentStatement.tokens, token{tokenType: tokenStrLiteral, value: l.currentValue})
+			l.addToken(tokenStrLiteral, l.currentValue)
 			l.state = lexerStateSkip
 			l.currentValue = ""
 		} else if c1 != "\"" {
 			l.currentValue += c1
 		}
 	}
+}
+
+func (l *lexer) addToken(ttype tokenType, value string) {
+	t := token{tokenType: ttype, value: value, column: l.column}
+	l.currentStatement.tokens = append(l.currentStatement.tokens, t)
 }
 
 // TODO scuffed? should we have not char but byte?

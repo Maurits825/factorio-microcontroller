@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	// filename := "./testrunner/testrunner.go"
-	filename := "lexer.go"
+	filename := "./testrunner/testrunner.go"
+	// filename := "lexer.go"
 
 	fmt.Println("Reading: " + filename)
 	file, err := os.Open(filename)
